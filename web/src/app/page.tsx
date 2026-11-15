@@ -146,24 +146,33 @@ export default function BuilderPage() {
         {/* TOP NAVBAR (Dark Purple Glass SaaS) */}
         <header className="sticky top-0 z-30 h-16 bg-[#0E0820]/95 backdrop-blur-md border-b border-[#2D1E51] px-3 sm:px-6 flex items-center justify-between gap-2 shadow-lg shadow-black/40">
           {/* Left Brand and App Name */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
             <Link
-              href="/admapps"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-bold hover:bg-emerald-500/25 transition shadow-sm"
-              title="Ir para o Painel Super Admin (MiniApps Studio)"
+              href="/painel"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-pink-600 to-purple-600 text-white text-xs font-bold hover:brightness-110 transition shadow-sm"
+              title="Ir para o Painel do Produtor (Meus Apps, Vendas & Páginas)"
             >
-              <Icon name="LayoutDashboard" size={13} />
-              <span>← Painel NoéPage</span>
+              <Icon name="ShoppingBag" size={13} />
+              <span>← Painel do Produtor</span>
             </Link>
 
-            <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-white">
+            <Link
+              href="/admapps"
+              className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold hover:bg-amber-500/25 transition"
+              title="Ir para o Painel Super Admin (Dono da Plataforma)"
+            >
+              <Icon name="Crown" size={12} />
+              <span>Super Admin</span>
+            </Link>
+
+            <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-white ml-1">
               <span className="w-2 h-2 rounded-full bg-[#EC4899] animate-pulse"></span>
               <span className="text-[#C7B9E8] font-bold">NoéPage</span>
               <span className="text-[#6C5B96]">•</span>
               <input
                 value={doc.name}
                 onChange={(e) => setName(e.target.value)}
-                className="font-extrabold text-xs text-white bg-transparent border-b border-transparent hover:border-[#3E2B6D] focus:border-[#7C3AED] outline-none truncate max-w-[200px]"
+                className="font-extrabold text-xs text-white bg-transparent border-b border-transparent hover:border-[#3E2B6D] focus:border-[#7C3AED] outline-none truncate max-w-[180px]"
                 placeholder="Nome do Mini App"
               />
             </div>
