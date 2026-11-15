@@ -1,0 +1,561 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import { useBuilder } from "@/lib/builder/store";
+import { Canvas } from "@/components/builder/Canvas";
+import { FloatingBar } from "@/components/builder/FloatingBar";
+import { BlockDrawer } from "@/components/builder/BlockDrawer";
+import { PropertiesPanel } from "@/components/builder/PropertiesPanel";
+import { FullScreenPreview } from "@/components/builder/FullScreenPreview";
+import { TemplatesGallery } from "@/components/builder/TemplatesGallery";
+import { AIKeysModal } from "@/components/builder/AIKeysModal";
+import { HtmlConverterModal } from "@/components/backend/HtmlConverterModal";
+import { EmojiGrid, IconGrid } from "@/components/builder/Pickers";
+import { TEMPLATES } from "@/lib/builder/templates";
+import { Icon } from "@/components/Icon";
+import { cn } from "@/lib/builder/utils";
+import type { BlockStyle } from "@/lib/builder/types";
+
+export default function BuilderPage() {
+  const {
+    doc,
+    pageId,
+    selectedId,
+    device,
+    setDevice,
+    panel,
+    preview,
+    select,
+    setPanel,
+    setPreview,
+    addBlock,
+    moveBlock,
+    moveBy,
+    duplicate,
+    remove,
+    toggleHidden,
+    updateProps,
+    updateStyle,
+    setTheme,
+    setName,
+    applyTemplate,
+    addPage,
+    removePage,
+    setPage,
+  } = useBuilder();
+
+  // Abas principais do Construtor: "editor" | "templates"
+  const [mainTab, setMainTab] = useState<"editor" | "templates">("editor");
+  const [aiKeysOpen, setAiKeysOpen] = useState(false);
+  const [converterOpen, setConverterOpen] = useState(false);
+
+  const [activeDragItem, setActiveDragItem] = useState<{
+    label: string;
+    icon?: string;
+  } | null>(null);
+
+  const [publishModal, setPublishModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [customDomain, setCustomDomain] = useState("");
+  const [domainVerified, setDomainVerified] = useState<boolean | null>(null);
+
+  const currentPage = doc.pages.find((p) => p.id === pageId) || doc.pages[0];
+  const selectedBlock = currentPage.blocks.find((b) => b.id === selectedId) || null;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const data = event.active.data.current;
+    if (data?.kind === "new") {
+      setActiveDragItem({ label: data.label, icon: data.type });
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveDragItem(null);
+
+    if (!over) return;
+
+    const activeData = active.data.current;
+
+    // Caso 1: Arrastando novo item da gaveta
+    if (activeData?.kind === "new") {
+      const type = activeData.type;
+      const initialProps = activeData.props || {};
+
+      const overIndex = currentPage.blocks.findIndex((b) => b.id === over.id);
+      const insertAt = overIndex >= 0 ? overIndex + 1 : currentPage.blocks.length;
+
+      addBlock(type, insertAt, initialProps);
+      return;
+    }
+
+    // Caso 2: Reordenando blocos existentes no canvas
+    if (active.id !== over.id) {
+      const oldIndex = currentPage.blocks.findIndex((b) => b.id === active.id);
+      const newIndex = currentPage.blocks.findIndex((b) => b.id === over.id);
+      if (oldIndex >= 0 && newIndex >= 0) {
+        moveBlock(oldIndex, newIndex);
+      }
+    }
+  };
+
+  const copyAppUrl = () => {
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/a/${doc.slug || "meu-app"}`;
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const verifyDomain = () => {
+    if (!customDomain.trim()) return;
+    setDomainVerified(null);
+    setTimeout(() => {
+      setDomainVerified(true);
+    }, 800);
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      {/* Container Principal: Fundo Dark Purple Elegante (idêntico ao /admapps) */}
+      <div className="min-h-screen bg-[#0B0714] text-[#F8F5FF] flex flex-col relative select-none font-sans">
+        
+        {/* TOP NAVBAR (Dark Purple Glass SaaS) */}
+        <header className="sticky top-0 z-30 h-16 bg-[#0E0820]/95 backdrop-blur-md border-b border-[#2D1E51] px-3 sm:px-6 flex items-center justify-between gap-2 shadow-lg shadow-black/40">
+          {/* Left Brand and App Name */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href="/admapps"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-bold hover:bg-emerald-500/25 transition shadow-sm"
+              title="Ir para o Painel Super Admin (MiniApps Studio)"
+            >
+              <Icon name="LayoutDashboard" size={13} />
+              <span>← Painel NoéPage</span>
+            </Link>
+
+            <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-white">
+              <span className="w-2 h-2 rounded-full bg-[#EC4899] animate-pulse"></span>
+              <span className="text-[#C7B9E8] font-bold">NoéPage</span>
+              <span className="text-[#6C5B96]">•</span>
+              <input
+                value={doc.name}
+                onChange={(e) => setName(e.target.value)}
+                className="font-extrabold text-xs text-white bg-transparent border-b border-transparent hover:border-[#3E2B6D] focus:border-[#7C3AED] outline-none truncate max-w-[200px]"
+                placeholder="Nome do Mini App"
+              />
+            </div>
+          </div>
+
+          {/* Center Navigation Tabs: Construtor, Templates, Converter, AI Keys */}
+          <div className="flex items-center bg-[#170E2F] border border-[#2D1E51] p-1 rounded-full text-xs font-bold shadow-inner">
+            <button
+              onClick={() => setMainTab("editor")}
+              className={cn(
+                "px-3 py-1.5 rounded-full flex items-center gap-1.5 transition",
+                mainTab === "editor"
+                  ? "bg-[#7C3AED] text-white shadow-md shadow-[#7C3AED]/20 font-extrabold"
+                  : "text-[#C7B9E8] hover:text-white"
+              )}
+            >
+              <Icon name="Edit3" size={13} />
+              <span>🎨 Construtor</span>
+            </button>
+
+            <button
+              onClick={() => setMainTab("templates")}
+              className={cn(
+                "px-3 py-1.5 rounded-full flex items-center gap-1.5 transition",
+                mainTab === "templates"
+                  ? "bg-[#7C3AED] text-white shadow-md shadow-[#7C3AED]/20 font-extrabold"
+                  : "text-[#C7B9E8] hover:text-white"
+              )}
+            >
+              <Icon name="LayoutTemplate" size={13} />
+              <span>📂 Templates</span>
+            </button>
+
+            <button
+              onClick={() => setConverterOpen(true)}
+              className="px-3 py-1.5 rounded-full text-[#C7B9E8] hover:text-white flex items-center gap-1.5 transition hover:bg-white/10"
+              title="Converter página de vendas HTML/ZIP para PWA"
+            >
+              <Icon name="Code" size={13} className="text-orange-400" />
+              <span>⚡ Converter</span>
+            </button>
+
+            <button
+              onClick={() => setAiKeysOpen(true)}
+              className="px-3 py-1.5 rounded-full text-[#C7B9E8] hover:text-white flex items-center gap-1.5 transition hover:bg-white/10"
+            >
+              <Icon name="Key" size={13} className="text-amber-400" />
+              <span>🔑 Chaves de IA</span>
+            </button>
+          </div>
+
+          {/* Right Actions: Viewport, Visualizar, Publicar */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Viewport switch (Desktop / Mobile) */}
+            <div className="hidden sm:flex items-center bg-[#170E2F] border border-[#2D1E51] p-0.5 rounded-full text-xs">
+              <button
+                onClick={() => setDevice("desktop")}
+                className={cn(
+                  "px-2.5 py-1 rounded-full transition flex items-center gap-1 font-semibold",
+                  device === "desktop"
+                    ? "bg-[#2D1E51] text-white shadow-xs font-bold"
+                    : "text-[#8F7EB6] hover:text-white"
+                )}
+              >
+                <Icon name="Monitor" size={12} />
+                <span>Desktop</span>
+              </button>
+              <button
+                onClick={() => setDevice("mobile")}
+                className={cn(
+                  "px-2.5 py-1 rounded-full transition flex items-center gap-1 font-semibold",
+                  device === "mobile"
+                    ? "bg-[#2D1E51] text-white shadow-xs font-bold"
+                    : "text-[#8F7EB6] hover:text-white"
+                )}
+              >
+                <Icon name="Smartphone" size={12} />
+                <span>Celular</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setPreview(true)}
+              className="px-3.5 py-1.5 rounded-full bg-[#231743] hover:bg-[#2F1F5A] text-white text-xs font-bold transition flex items-center gap-1.5 border border-[#3E2B6D]"
+              title="Abrir prévia tamanho total da página"
+            >
+              <Icon name="Eye" size={14} className="text-[#EC4899]" />
+              <span>Visualizar</span>
+            </button>
+
+            <button
+              onClick={() => setPublishModal(true)}
+              className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-xs font-extrabold hover:brightness-110 shadow-lg shadow-[#7C3AED]/20 transition flex items-center gap-1.5"
+            >
+              <Icon name="Rocket" size={13} />
+              <span>Publicar</span>
+            </button>
+          </div>
+        </header>
+
+        {/* MAIN VIEW: TEMPLATES vs BUILDER EDITOR */}
+        {mainTab === "templates" ? (
+          <main className="flex-1 overflow-y-auto bg-[#0B0714]">
+            <TemplatesGallery
+              onSelectTemplate={(t) => {
+                setMainTab("editor");
+              }}
+            />
+          </main>
+        ) : (
+          /* BUILDER EDITOR WORKSPACE (Fundo Dark Purple idêntico ao /admapps) */
+          <div className="flex-1 flex overflow-hidden relative bg-[#0B0714]">
+            {/* Canvas Central */}
+            <main className="flex-1 overflow-y-auto p-4 sm:p-8 flex items-start justify-center relative bg-[radial-gradient(#2D1E51_1.5px,transparent_1.5px)] [background-size:24px_24px]">
+              <Canvas
+                blocks={currentPage.blocks}
+                theme={doc.theme}
+                device={device}
+                selectedId={selectedId}
+                onSelectBlock={select}
+                onMoveUp={(id) => moveBy(id, -1)}
+                onMoveDown={(id) => moveBy(id, 1)}
+                onDuplicate={duplicate}
+                onToggleHidden={toggleHidden}
+                onDelete={remove}
+                onOpenProperties={() => {}}
+                onOpenDrawer={() => setPanel("blocks")}
+              />
+            </main>
+
+            {/* Painel Lateral Direita: Propriedades do Bloco Selecionado */}
+            {selectedBlock && (
+              <aside className="w-80 md:w-96 border-l border-[#2D1E51] bg-[#120A22] h-full shrink-0 z-30 shadow-2xl animate-in slide-in-from-right duration-200">
+                <PropertiesPanel
+                  block={selectedBlock}
+                  theme={doc.theme}
+                  onUpdateProps={(patch) => updateProps(selectedBlock.id, patch)}
+                  onUpdateStyle={(patch) => updateStyle(selectedBlock.id, patch as Partial<BlockStyle>)}
+                  onClose={() => select(null)}
+                />
+              </aside>
+            )}
+          </div>
+        )}
+
+        {/* Barra Flutuante (Visível no modo Editor - Sem o botão Super Admin!) */}
+        {mainTab === "editor" && <FloatingBar />}
+
+        {/* Modal da Gaveta de 23 Blocos NoéPage */}
+        {panel && (
+          <div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+            onClick={() => setPanel(null)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[#0D071B] border border-purple-500/40 w-full sm:max-w-2xl max-h-[88vh] rounded-3xl p-6 shadow-2xl shadow-purple-950/80 overflow-visible flex flex-col relative"
+            >
+              {panel === "blocks" && (
+                <BlockDrawer
+                  onSelectBlock={(type, props) => {
+                    addBlock(type, undefined, props);
+                    setPanel(null);
+                  }}
+                  onClose={() => setPanel(null)}
+                />
+              )}
+
+              {panel === "emoji" && (
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-extrabold text-base flex items-center gap-2 text-white">
+                      <span>😀</span> Seletor de Emojis
+                    </h3>
+                    <button
+                      onClick={() => setPanel(null)}
+                      className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-slate-300"
+                    >
+                      <Icon name="X" size={15} />
+                    </button>
+                  </div>
+                  <EmojiGrid
+                    draggable
+                    onPick={(e) => {
+                      addBlock("emoji", undefined, { emoji: e });
+                      setPanel(null);
+                    }}
+                  />
+                </div>
+              )}
+
+              {panel === "icon" && (
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-extrabold text-base flex items-center gap-2 text-white">
+                      <Icon name="Sparkles" size={18} className="text-violet-400" />
+                      Seletor de Ícones (+1.500 ícones)
+                    </h3>
+                    <button
+                      onClick={() => setPanel(null)}
+                      className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-slate-300"
+                    >
+                      <Icon name="X" size={15} />
+                    </button>
+                  </div>
+                  <IconGrid
+                    draggable
+                    onPick={(name) => {
+                      addBlock("icone", undefined, { icon: name });
+                      setPanel(null);
+                    }}
+                  />
+                </div>
+              )}
+
+              {panel === "templates" && (
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-extrabold text-base flex items-center gap-2 text-white">
+                      <Icon name="LayoutTemplate" size={18} className="text-pink-400" />
+                      Modelos Prontos
+                    </h3>
+                    <button
+                      onClick={() => setPanel(null)}
+                      className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-slate-300"
+                    >
+                      <Icon name="X" size={15} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[60vh] overflow-y-auto pr-1">
+                    {TEMPLATES.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          applyTemplate(t);
+                          setPanel(null);
+                        }}
+                        className="text-left p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition group"
+                      >
+                        <div
+                          className="h-16 rounded-xl p-2.5 flex flex-col justify-between mb-2 text-white"
+                          style={{ background: t.grad }}
+                        >
+                          <span className="text-xs font-bold uppercase tracking-wider opacity-80">
+                            {t.cat}
+                          </span>
+                          <span className="text-2xl">{t.emoji}</span>
+                        </div>
+                        <p className="font-extrabold text-xs text-white group-hover:text-violet-400">
+                          {t.name}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* MODAL DE CHAVES DE IA (BYOK) */}
+        {aiKeysOpen && (
+          <AIKeysModal onClose={() => setAiKeysOpen(false)} />
+        )}
+
+        {/* MODAL CONVERSOR DE PÁGINAS (HTML/ZIP PARA PWA) */}
+        {converterOpen && (
+          <HtmlConverterModal onClose={() => setConverterOpen(false)} />
+        )}
+
+        {/* PRÉVIA TOTAL DA PÁGINA (100vw x 100vh) */}
+        {preview && (
+          <FullScreenPreview onClose={() => setPreview(false)} />
+        )}
+
+        {/* MODAL DE PUBLICAÇÃO DO PWA */}
+        {publishModal && (
+          <div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+            onClick={() => setPublishModal(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200 text-slate-900 animate-in zoom-in-95 duration-150"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div>
+                  <span className="px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-bold">
+                    PWA ONLINE
+                  </span>
+                  <h3 className="text-xl font-black text-slate-900 mt-1">
+                    Publicar Mini App
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setPublishModal(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500"
+                >
+                  <Icon name="X" size={16} />
+                </button>
+              </div>
+
+              {/* Link Exclusivo do App */}
+              <div className="mt-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                    Link Exclusivo do seu PWA:
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      readOnly
+                      value={`${typeof window !== "undefined" ? window.location.origin : ""}/a/${doc.slug || "meu-app"}`}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-mono select-all outline-none"
+                    />
+                    <button
+                      onClick={copyAppUrl}
+                      className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs transition flex items-center gap-1.5 shrink-0 shadow-sm"
+                    >
+                      <Icon name={copied ? "Check" : "Copy"} size={14} />
+                      <span>{copied ? "Copiado!" : "Copiar"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Domínio Próprio (CNAME) */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                    Domínio Próprio Personalizado (CNAME):
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      value={customDomain}
+                      onChange={(e) => {
+                        setCustomDomain(e.target.value);
+                        setDomainVerified(null);
+                      }}
+                      placeholder="app.seusite.com.br"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 outline-none focus:border-violet-500"
+                    />
+                    <button
+                      onClick={verifyDomain}
+                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition shrink-0"
+                    >
+                      Verificar DNS
+                    </button>
+                  </div>
+                  {domainVerified && (
+                    <p className="text-[11px] font-bold text-emerald-600 mt-1.5 flex items-center gap-1">
+                      <span>✓</span> Domínio apontado e certificado SSL ativo.
+                    </p>
+                  )}
+                </div>
+
+                {/* QR Code Card */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-4">
+                  <div className="w-20 h-20 bg-white rounded-xl p-2 border border-slate-200 flex items-center justify-center shadow-xs shrink-0 text-3xl">
+                    📱
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-extrabold text-slate-800">
+                      Instalação Automática no Celular
+                    </h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                      Ao abrir o link no celular, o usuário vê o botão &quot;Adicionar à Tela Inicial&quot; e instala como app nativo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botão Concluir */}
+              <div className="mt-6 pt-4 border-t border-slate-100 flex gap-2">
+                <button
+                  onClick={() => setPublishModal(false)}
+                  className="w-full py-3 rounded-full bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs shadow-md transition"
+                >
+                  Concluir e Voltar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Drag Overlay para feedback visual suave */}
+        <DragOverlay>
+          {activeDragItem ? (
+            <div className="px-4 py-2.5 rounded-2xl bg-violet-600 text-white font-extrabold text-xs shadow-2xl flex items-center gap-2 border border-white/20">
+              <Icon name="Plus" size={14} />
+              <span>Inserindo: {activeDragItem.label}</span>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </div>
+    </DndContext>
+  );
+}

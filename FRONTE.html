@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MineApps Studio • Construtor & Gestão Multi-PWA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F1F5F9; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    
+    .workspace-dot-bg {
+      background-color: #F1F5F9;
+      background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .modal-backdrop {
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-900 font-sans min-h-screen overflow-x-hidden selection:bg-purple-600 selection:text-white">
+
+  <!-- ======================================================== -->
+  <!-- TOP NAVBAR                                               -->
+  <!-- ======================================================== -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2 select-none shadow-xs">
+    <!-- Left: Brand / Backoffice Pill -->
+    <div class="flex items-center gap-3 shrink-0">
+      <button onclick="switchMainTab('backoffice')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition shadow-xs" title="Abrir Painel Backoffice">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        <span>Painel NoéPage</span>
+      </button>
+      <div class="hidden md:flex items-center gap-2 text-xs font-semibold text-slate-700">
+        <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
+        <span class="text-slate-400 font-bold">NoéPage</span>
+        <span class="text-slate-300">•</span>
+        <span id="pageTitleDisplay" class="text-slate-900 font-extrabold truncate max-w-[200px]">Guia Low Carb para Iniciantes</span>
+      </div>
+    </div>
+
+    <!-- Center: Platform Hub Tabs (Backoffice, Construtor, Templates, Converter, Chaves IA) -->
+    <div class="flex items-center bg-slate-100 border border-slate-200 p-1 rounded-full text-xs font-bold shadow-inner">
+      <button id="navBtn-backoffice" onclick="switchMainTab('backoffice')" class="px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-slate-600 hover:text-slate-900 transition">
+        <span>📊 Painel</span>
+      </button>
+      <button id="navBtn-editor" onclick="switchMainTab('editor')" class="px-3.5 py-1.5 rounded-full bg-white text-violet-700 shadow-sm font-extrabold flex items-center gap-1.5 transition">
+        <span>🎨 Construtor</span>
+      </button>
+      <button id="navBtn-templates" onclick="switchMainTab('templates')" class="px-3.5 py-1.5 rounded-full text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition">
+        <span>📂 Templates</span>
+      </button>
+      <button onclick="openConverterModal()" class="px-3 py-1.5 rounded-full text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition hover:bg-white/60">
+        <span class="text-orange-500">⚡</span>
+        <span>Converter HTML</span>
+      </button>
+      <button onclick="openAIKeysModal()" class="px-3 py-1.5 rounded-full text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition hover:bg-white/60">
+        <span class="text-amber-500">🔑</span>
+        <span>Chaves de IA</span>
+      </button>
+    </div>
+
+    <!-- Right Actions: Viewport, Visualizar, Publicar -->
+    <div class="flex items-center gap-2 shrink-0">
+      <div class="hidden sm:flex items-center bg-slate-100 border border-slate-200 p-0.5 rounded-full text-xs">
+        <button id="btnViewDesktop" onclick="setViewMode('desktop')" class="px-2.5 py-1 rounded-full text-slate-500 hover:text-slate-800 font-semibold transition">Desktop</button>
+        <button id="btnViewMobile" onclick="setViewMode('mobile')" class="px-2.5 py-1 rounded-full bg-white text-slate-900 shadow-xs font-bold transition">Celular</button>
+      </div>
+
+      <button onclick="openFullscreenPreview()" class="px-3.5 py-1.5 rounded-full bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+        <svg class="w-3.5 h-3.5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        <span>Visualizar</span>
+      </button>
+
+      <button onclick="openPublishModal()" class="px-4 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-violet-600 text-white text-xs font-extrabold hover:brightness-105 shadow-md shadow-pink-200 transition flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span>Publicar PWA</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- VIEW 1: PAINEL BACKOFFICE (Backend.html Integrado)       -->
+  <!-- ======================================================== -->
+  <section id="view-backoffice" class="hidden min-h-[calc(100vh-64px)] p-6 sm:p-10 max-w-7xl mx-auto space-y-6">
+    <!-- Backoffice Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-extrabold tracking-wide">PAINEL SUPER ADMIN</span>
+          <span class="text-xs text-slate-400">• Multi-PWA &amp; Gestão Financeira</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Gestão Central do SaaS MineApps</h1>
+        <p class="text-xs text-slate-500 mt-0.5">Acompanhe usuários, planos, faturas vencidas, campanhas de vídeo 9:16 e availability dos apps.</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="openConverterModal()" class="px-4 py-2.5 rounded-full bg-white border border-slate-300 hover:border-violet-500 text-slate-700 text-xs font-bold shadow-xs flex items-center gap-1.5">
+          <span>⚡ Converter Página (HTML/ZIP)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Backoffice Module Sub-Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-slate-200 text-xs font-bold">
+      <button onclick="setBackofficeTab('bo-dash')" id="boTabBtn-bo-dash" class="px-3.5 py-1.5 rounded-full bg-violet-600 text-white shadow-xs">Dashboard</button>
+      <button onclick="setBackofficeTab('bo-users')" id="boTabBtn-bo-users" class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Usuários (CRM)</button>
+      <button onclick="setBackofficeTab('bo-plans')" id="boTabBtn-bo-plans" class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Planos &amp; Trial</button>
+      <button onclick="setBackofficeTab('bo-apps')" id="boTabBtn-bo-apps" class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">PWAs &amp; Domínios</button>
+      <button onclick="setBackofficeTab('bo-ads')" id="boTabBtn-bo-ads" class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Anúncios (Vídeo 9:16)</button>
+      <button onclick="setBackofficeTab('bo-invoices')" id="boTabBtn-bo-invoices" class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Faturas &amp; Finanças</button>
+      <button onclick="setBackofficeTab('bo-webhooks')" id="boTabBtn-bo-webhooks" class="px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Hub de Webhooks</button>
+    </div>
+
+    <!-- Backoffice Tab 1: Dashboard -->
+    <div id="boTab-bo-dash" class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Usuários Ativos</span>
+          <h3 class="text-2xl font-black text-slate-900 mt-1">2.840</h3>
+          <p class="text-xs text-emerald-600 font-bold mt-1">↑ +18,4% nos últimos 30 dias</p>
+        </div>
+        <div class="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Receita Mensal</span>
+          <h3 class="text-2xl font-black text-slate-900 mt-1">R$ 48.920</h3>
+          <p class="text-xs text-emerald-600 font-bold mt-1">↑ +12,8% vs. mês anterior</p>
+        </div>
+        <div class="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">PWAs no Ar</span>
+          <h3 class="text-2xl font-black text-slate-900 mt-1">86 Apps</h3>
+          <p class="text-xs text-slate-500 font-medium mt-1">98,8% de disponibilidade</p>
+        </div>
+        <div class="p-5 rounded-3xl bg-rose-50/30 border border-rose-200 shadow-xs">
+          <span class="text-xs font-bold uppercase tracking-wider text-rose-700">Faturas Pendentes</span>
+          <h3 class="text-2xl font-black text-rose-600 mt-1">12 Vencidas</h3>
+          <p class="text-xs text-rose-500 font-bold mt-1">Lembrete de cobrança pendente</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backoffice Tab 2: Users CRM -->
+    <div id="boTab-bo-users" class="hidden space-y-4">
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+            <tr>
+              <th class="py-3 px-4">Produtor / Usuário</th>
+              <th class="py-3 px-4">Plano</th>
+              <th class="py-3 px-4">PWAs</th>
+              <th class="py-3 px-4">Receita</th>
+              <th class="py-3 px-4">Status</th>
+              <th class="py-3 px-4 text-right">Ação</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr class="hover:bg-slate-50">
+              <td class="py-3 px-4 font-bold text-slate-900">Camila Duarte<br><span class="text-slate-400 font-normal">camila@metodofoco.com.br</span></td>
+              <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold">Premium</span></td>
+              <td class="py-3 px-4">12 apps</td>
+              <td class="py-3 px-4 font-black">R$ 4.280</td>
+              <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold">Ativo</span></td>
+              <td class="py-3 px-4 text-right"><button onclick="showToast('Produtor gerenciado!')" class="text-violet-600 font-bold hover:underline">Gerenciar</button></td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="py-3 px-4 font-bold text-slate-900">Rafael Almeida<br><span class="text-slate-400 font-normal">rafael@guialowcarb.com</span></td>
+              <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold">Pro</span></td>
+              <td class="py-3 px-4">7 apps</td>
+              <td class="py-3 px-4 font-black">R$ 2.140</td>
+              <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold">Ativo</span></td>
+              <td class="py-3 px-4 text-right"><button onclick="showToast('Produtor gerenciado!')" class="text-violet-600 font-bold hover:underline">Gerenciar</button></td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="py-3 px-4 font-bold text-slate-900">Beatriz Souza<br><span class="text-slate-400 font-normal">bia@inglesfluente.com</span></td>
+              <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold">Pro</span></td>
+              <td class="py-3 px-4">5 apps</td>
+              <td class="py-3 px-4 font-black">R$ 1.890</td>
+              <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-bold">Trial 7 Dias</span></td>
+              <td class="py-3 px-4 text-right"><button onclick="showToast('Produtor gerenciado!')" class="text-violet-600 font-bold hover:underline">Gerenciar</button></td>
+            </tr>
+            <tr class="hover:bg-slate-50">
+              <td class="py-3 px-4 font-bold text-slate-900">Mariana Costa<br><span class="text-slate-400 font-normal">mari@rendaextra.com</span></td>
+              <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 font-bold">Premium</span></td>
+              <td class="py-3 px-4">18 apps</td>
+              <td class="py-3 px-4 font-black">R$ 6.540</td>
+              <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 font-bold">Bloqueado</span></td>
+              <td class="py-3 px-4 text-right"><button onclick="showToast('Produtor desbloqueado!')" class="text-emerald-600 font-bold hover:underline">Desbloquear</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Backoffice Tab 3: Plans -->
+    <div id="boTab-bo-plans" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div>
+          <span class="px-3 py-1 rounded-full bg-violet-50 text-violet-700 font-extrabold text-xs">FREE</span>
+          <h3 class="text-3xl font-black text-slate-900 my-2">R$ 0 <span class="text-xs text-slate-400 font-normal">/ mês</span></h3>
+          <p class="text-xs text-slate-500 mb-4">Para testar o MineApps e publicar o primeiro app.</p>
+          <div class="space-y-1.5 text-xs text-slate-700 font-semibold border-t pt-3">
+            <p>✓ 1 PWA Ativo</p>
+            <p>✓ Editor Drag &amp; Drop</p>
+            <p>✓ Gatilho de Upgrade Automático</p>
+          </div>
+        </div>
+        <button onclick="showToast('Configurações salvas!')" class="mt-6 w-full py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs">Editar Plano</button>
+      </div>
+
+      <div class="p-6 rounded-3xl bg-white border-2 border-violet-500 shadow-md flex flex-col justify-between relative">
+        <span class="absolute -top-3 right-6 px-3 py-0.5 rounded-full bg-violet-600 text-white font-extrabold text-[10px] uppercase">Mais Popular</span>
+        <div>
+          <span class="px-3 py-1 rounded-full bg-violet-50 text-violet-700 font-extrabold text-xs">PRO</span>
+          <h3 class="text-3xl font-black text-slate-900 my-2">R$ 97 <span class="text-xs text-slate-400 font-normal">/ mês</span></h3>
+          <p class="text-xs text-slate-500 mb-4">Para produtores que vendem todos os dias no WhatsApp.</p>
+          <div class="space-y-1.5 text-xs text-slate-700 font-semibold border-t pt-3">
+            <p>✓ 10 PWAs no Ar</p>
+            <p>✓ 7 Dias Grátis (Trial)</p>
+            <p>✓ Vídeo 9:16 + Domínio CNAME</p>
+            <p>✓ Hub de Webhooks Gateways</p>
+          </div>
+        </div>
+        <button onclick="showToast('Configurações salvas!')" class="mt-6 w-full py-2.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs shadow-md">Editar Plano</button>
+      </div>
+
+      <div class="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div>
+          <span class="px-3 py-1 rounded-full bg-violet-50 text-violet-700 font-extrabold text-xs">PREMIUM</span>
+          <h3 class="text-3xl font-black text-slate-900 my-2">R$ 197 <span class="text-xs text-slate-400 font-normal">/ mês</span></h3>
+          <p class="text-xs text-slate-500 mb-4">Para agências, infoprodutores e grandes operações.</p>
+          <div class="space-y-1.5 text-xs text-slate-700 font-semibold border-t pt-3">
+            <p>✓ PWAs Ilimitados</p>
+            <p>✓ Chaves de IA (BYOK Ilimitado)</p>
+            <p>✓ Suporte VIP Prioritário</p>
+          </div>
+        </div>
+        <button onclick="showToast('Configurações salvas!')" class="mt-6 w-full py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs">Editar Plano</button>
+      </div>
+    </div>
+
+    <!-- Backoffice Tab 4: Apps PWAs with Availability Toggle -->
+    <div id="boTab-bo-apps" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span id="appStatus-1" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">● No Ar</span>
+            <button onclick="toggleAppStatus(1)" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200">Alternar Status</button>
+          </div>
+          <h3 class="text-lg font-black text-slate-900">Guia Low Carb para Iniciantes</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Produtor: Rafael Almeida</p>
+          <div class="mt-4 space-y-1.5 text-xs font-mono">
+            <p class="text-slate-600">CNAME: guialowcarb.com.br</p>
+            <p class="text-violet-600 truncate">/p/guia-low-carb</p>
+          </div>
+        </div>
+        <div class="mt-6 pt-4 border-t flex gap-2">
+          <button onclick="loadAppInEditor('Guia Low Carb para Iniciantes')" class="flex-1 py-2 rounded-full bg-violet-600 text-white font-extrabold text-xs shadow-xs">Abrir no Construtor</button>
+        </div>
+      </div>
+
+      <div class="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span id="appStatus-2" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">● No Ar</span>
+            <button onclick="toggleAppStatus(2)" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200">Alternar Status</button>
+          </div>
+          <h3 class="text-lg font-black text-slate-900">Método Foco Total</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Produtor: Camila Duarte</p>
+          <div class="mt-4 space-y-1.5 text-xs font-mono">
+            <p class="text-slate-600">CNAME: metodofoco.com.br</p>
+            <p class="text-violet-600 truncate">/p/metodo-foco</p>
+          </div>
+        </div>
+        <div class="mt-6 pt-4 border-t flex gap-2">
+          <button onclick="loadAppInEditor('Método Foco Total')" class="flex-1 py-2 rounded-full bg-violet-600 text-white font-extrabold text-xs shadow-xs">Abrir no Construtor</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backoffice Tab 5: Ads 9:16 -->
+    <div id="boTab-bo-ads" class="hidden p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b">
+        <div>
+          <h3 class="font-extrabold text-slate-900">Player Vertical Formato Celular (9:16 - Reels/Stories)</h3>
+          <p class="text-xs text-slate-500">Vídeos 9:16 que rodam nativamente dentro do PWA com CTA e autoplay.</p>
+        </div>
+        <button onclick="showToast('Nova campanha de vídeo 9:16 criada!')" class="px-4 py-2 bg-violet-600 text-white font-bold rounded-full text-xs">+ Novo Anúncio 9:16</button>
+      </div>
+      <div class="p-4 rounded-2xl bg-slate-50 border flex items-center justify-between text-xs">
+        <div>
+          <h4 class="font-bold text-slate-900">Oferta Relâmpago 50% OFF (Vídeo 9:16)</h4>
+          <p class="text-slate-500">CTA após 8 segundos • 14.200 visualizações</p>
+        </div>
+        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">Ativo no PWA</span>
+      </div>
+    </div>
+
+    <!-- Backoffice Tab 6: Invoices -->
+    <div id="boTab-bo-invoices" class="hidden bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-50 border-b text-slate-500 font-bold uppercase text-[10px]">
+          <tr>
+            <th class="py-3 px-4">Código</th>
+            <th class="py-3 px-4">Cliente</th>
+            <th class="py-3 px-4">Plano</th>
+            <th class="py-3 px-4">Valor</th>
+            <th class="py-3 px-4">Status</th>
+            <th class="py-3 px-4 text-right">Ação</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr>
+            <td class="py-3 px-4 font-mono">FAT-1042</td>
+            <td class="py-3 px-4 font-bold">Camila Duarte</td>
+            <td class="py-3 px-4">Premium</td>
+            <td class="py-3 px-4 font-black">R$ 197,00</td>
+            <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 font-bold">Vencido</span></td>
+            <td class="py-3 px-4 text-right"><button onclick="showToast('Lembrete de cobrança disparado!')" class="text-violet-600 font-bold hover:underline">Cobrar</button></td>
+          </tr>
+          <tr>
+            <td class="py-3 px-4 font-mono">FAT-1041</td>
+            <td class="py-3 px-4 font-bold">Rafael Almeida</td>
+            <td class="py-3 px-4">Pro</td>
+            <td class="py-3 px-4 font-black">R$ 97,00</td>
+            <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold">Pago</span></td>
+            <td class="py-3 px-4 text-right"><span class="text-slate-400">✓ Liquidado</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Backoffice Tab 7: Webhooks -->
+    <div id="boTab-bo-webhooks" class="hidden p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
+      <h3 class="font-extrabold text-slate-900">Hub de Webhooks de Pagamento</h3>
+      <div class="space-y-3 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-50 border">
+          <p class="font-bold text-slate-800 mb-1">Kiwify Webhook</p>
+          <input readOnly value="https://miniapp.studio/api/webhooks/kiwify" class="w-full bg-white border rounded-xl p-2 font-mono text-slate-700">
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-50 border">
+          <p class="font-bold text-slate-800 mb-1">Stripe Webhook</p>
+          <input readOnly value="https://miniapp.studio/api/webhooks/stripe" class="w-full bg-white border rounded-xl p-2 font-mono text-slate-700">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- VIEW 2: VITRINE DE TEMPLATES                             -->
+  <!-- ======================================================== -->
+  <section id="view-templates" class="hidden min-h-[calc(100vh-64px)] p-6 sm:p-10 max-w-6xl mx-auto">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+      <div>
+        <span class="px-3 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-bold tracking-wide">VITRINE DE MODELOS</span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Modelos Prontos de Alta Conversão</h1>
+        <p class="text-sm text-slate-500 mt-1">Escolha um modelo validado ou faça upload do seu próprio arquivo JSON.</p>
+      </div>
+      <div class="flex items-center gap-2.5">
+        <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-slate-300 text-slate-700 text-xs font-bold shadow-xs">
+          <span>⬆️ Upload (JSON)</span>
+          <input type="file" accept=".json" onchange="uploadTemplateJson(event)" class="hidden">
+        </label>
+        <button onclick="downloadCurrentJson()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-slate-300 text-slate-700 text-xs font-bold shadow-xs">
+          <span>⬇️ Baixar Atual</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="templatesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6"></div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- VIEW 3: BUILDER EDITOR (Fundo Claro Moderno)             -->
+  <!-- ======================================================== -->
+  <main id="view-editor" class="workspace-dot-bg min-h-[calc(100vh-64px)] pb-36 flex flex-col items-center">
+    <div id="canvasWrapper" class="w-full max-w-[420px] mx-auto px-2 py-8 transition-all duration-300">
+      <div class="bg-white rounded-[44px] border-4 border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] p-3 overflow-hidden">
+        <div class="h-6 flex items-center justify-between px-6 pt-1 text-[11px] font-bold text-slate-500 select-none">
+          <span>9:41</span>
+          <div class="w-24 h-3.5 bg-slate-900 rounded-full"></div>
+          <span>100%</span>
+        </div>
+        <div id="blocksContainer" class="p-2 space-y-4 min-h-[580px] pb-16"></div>
+      </div>
+
+      <div onclick="openBlockDrawer()" class="mt-6 border-2 border-dashed border-violet-300 hover:border-violet-600 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer group bg-white/70 hover:bg-white transition shadow-xs">
+        <div class="w-10 h-10 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition">+</div>
+        <p class="text-xs font-bold text-slate-700 group-hover:text-violet-700">Clique para adicionar um novo bloco</p>
+        <p class="text-[11px] text-slate-400">23 blocos: Vídeo 9:16, Formulários, Quiz, Depoimentos, Emojis</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- FLOATING BOTTOM BAR (SEM O BOTÃO SUPER ADMIN!)           -->
+  <!-- ======================================================== -->
+  <div id="floatingBar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 select-none">
+    <div class="flex items-center gap-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/60 px-3 py-2 rounded-full shadow-2xl text-xs font-bold text-white">
+      <div class="px-1 text-slate-500 hover:text-slate-300 cursor-grab" title="Barra Flutuante">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 8h16M4 16h16"/></svg>
+      </div>
+
+      <button class="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-extrabold flex items-center gap-1.5 shadow-md shadow-pink-500/30">
+        <span>✏️ Modo Edição</span>
+      </button>
+
+      <button onclick="saveVersion()" class="px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold flex items-center gap-1.5 shadow-md shadow-emerald-500/30 transition">
+        <span>💾 Salvar</span>
+      </button>
+
+      <button onclick="switchMainTab('templates')" class="px-3 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center gap-1">
+        <span>📂 Modelos</span>
+      </button>
+
+      <button onclick="openFullscreenPreview()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition" title="Visualizar Prévia em Tela Cheia">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </button>
+
+      <button onclick="openBlockDrawer()" class="px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 text-white font-extrabold flex items-center gap-1.5 shadow-lg shadow-purple-600/40 hover:scale-105 transition">
+        <span>＋ Bloco</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: GAVETA DE 23 BLOCOS NOÉPAGE                       -->
+  <!-- ======================================================== -->
+  <div id="blockDrawerModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop bg-black/60 hidden">
+    <div class="relative w-full max-w-2xl bg-[#0D071B] border border-purple-500/40 rounded-3xl p-6 shadow-2xl shadow-purple-950/80 animate-in fade-in zoom-in-95 duration-200">
+      <div class="text-center mb-5">
+        <h3 class="text-sm font-semibold text-slate-200">Arraste para posicionar um novo bloco na página</h3>
+        <p class="text-xs text-slate-400 mt-1">💡 Para editar textos e imagens num bloco já existente, use Configurar nele</p>
+      </div>
+
+      <div id="drawerBlocksGrid" class="grid grid-cols-3 sm:grid-cols-5 gap-3 max-h-[52vh] overflow-y-auto pr-1">
+        <!-- 23 Buttons -->
+      </div>
+    </div>
+    <button onclick="closeBlockDrawer()" class="absolute -bottom-7 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-[#160D2E] border border-purple-500/60 text-white flex items-center justify-center shadow-[0_0_25px_rgba(168,85,247,0.6)] hover:scale-110 transition">✕</button>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: CONVERSOR DE PÁGINAS (HTML/ZIP PARA PWA)          -->
+  <!-- ======================================================== -->
+  <div id="converterModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="p-6 bg-slate-50 border-b flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center font-black">⚡</span>
+          <div>
+            <h2 class="text-lg font-extrabold text-slate-900">Conversor de Páginas (HTML / ZIP para PWA)</h2>
+            <p class="text-xs text-slate-500">Transforme qualquer página de vendas existente em um Mini App PWA instalável.</p>
+          </div>
+        </div>
+        <button onclick="closeConverterModal()" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nome do Mini App Convertido</label>
+          <input id="convAppName" defaultValue="Página de Vendas Convertida" class="w-full bg-slate-50 border rounded-xl p-2.5 font-bold outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Código HTML da Página de Vendas</label>
+          <textarea id="convHtmlCode" rows="5" placeholder="<section class='hero'><h1>Minha Oferta</h1><button>Comprar</button></section>" class="w-full bg-slate-50 font-mono text-[11px] border rounded-xl p-3 outline-none"></textarea>
+        </div>
+        <div id="convFeedback" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 hidden font-bold">
+          ✓ Conversão concluída! 2 títulos, 3 botões CTA e 4 seções detectadas.
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t flex justify-end gap-2">
+        <button onclick="closeConverterModal()" class="px-4 py-2 rounded-full bg-slate-200 font-bold text-xs">Cancelar</button>
+        <button onclick="runHtmlConversion()" class="px-6 py-2 rounded-full bg-violet-600 text-white font-extrabold text-xs shadow-md">Iniciar Conversão</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: CENTRAL DE CHAVES DE IA (BYOK)                    -->
+  <!-- ======================================================== -->
+  <div id="aiKeysModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="p-6 bg-slate-50 border-b flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-violet-600 text-white flex items-center justify-center text-sm font-extrabold shadow-sm">🔑</span>
+          <div>
+            <h2 class="text-lg font-extrabold text-slate-900">Central de Chaves de IA (BYOK)</h2>
+            <p class="text-xs text-slate-500">Configure suas próprias chaves para geração de cópias, chats e agentes.</p>
+          </div>
+        </div>
+        <button onclick="closeAIKeysModal()" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <div class="p-4 rounded-2xl border bg-white space-y-2">
+          <span class="font-extrabold text-slate-900">OpenAI (GPT-4o / GPT-4o mini)</span>
+          <div class="flex gap-2">
+            <input type="password" placeholder="sk-proj-..." class="flex-1 bg-slate-50 border rounded-xl px-3 py-2 text-xs font-mono">
+            <button onclick="showToast('Chave OpenAI testada com sucesso!')" class="px-3 py-2 bg-slate-100 rounded-xl font-bold">Testar</button>
+          </div>
+        </div>
+        <div class="p-4 rounded-2xl border bg-white space-y-2">
+          <span class="font-extrabold text-slate-900">Google Gemini (1.5 Flash / Pro)</span>
+          <div class="flex gap-2">
+            <input type="password" placeholder="AIzaSy..." class="flex-1 bg-slate-50 border rounded-xl px-3 py-2 text-xs font-mono">
+            <button onclick="showToast('Chave Gemini testada com sucesso!')" class="px-3 py-2 bg-slate-100 rounded-xl font-bold">Testar</button>
+          </div>
+        </div>
+        <div class="p-4 rounded-2xl border bg-white space-y-2">
+          <span class="font-extrabold text-slate-900">Groq (Llama 3.1 70B - 300 t/s)</span>
+          <div class="flex gap-2">
+            <input type="password" placeholder="gsk_..." class="flex-1 bg-slate-50 border rounded-xl px-3 py-2 text-xs font-mono">
+            <button onclick="showToast('Chave Groq testada com sucesso!')" class="px-3 py-2 bg-slate-100 rounded-xl font-bold">Testar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t flex justify-end gap-2">
+        <button onclick="closeAIKeysModal()" class="px-4 py-2 rounded-full bg-slate-200 font-bold text-xs">Cancelar</button>
+        <button onclick="saveAIKeys()" class="px-5 py-2 rounded-full bg-violet-600 text-white font-extrabold text-xs shadow-md">Salvar Chaves</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: PREVIEW EM TELA CHEIA (100vw x 100vh)             -->
+  <!-- ======================================================== -->
+  <div id="fullscreenPreviewModal" class="fixed inset-0 z-50 bg-[#F8FAFC] w-screen h-screen hidden flex flex-col">
+    <div class="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between shrink-0 shadow-xs">
+      <span class="text-xs font-extrabold text-slate-900 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        Prévia em Tempo Real (PWA Live Preview)
+      </span>
+      <button onclick="closeFullscreenPreview()" class="px-3.5 py-1.5 rounded-full bg-slate-800 text-white text-xs font-bold">✕ Fechar</button>
+    </div>
+    <div class="flex-1 overflow-y-auto flex justify-center items-start p-4 workspace-dot-bg">
+      <div id="previewFrame" class="w-full max-w-[420px] bg-white rounded-[38px] border-4 border-slate-800 shadow-2xl min-h-[85vh] p-4 space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFIER -->
+  <div id="toast" class="fixed top-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold translate-y-[-150%] transition-transform duration-300">
+    <span id="toastIcon">✨</span>
+    <span id="toastMsg">Alteração salva!</span>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- CORE SCRIPT                                              -->
+  <!-- ======================================================== -->
+  <script>
+    const BLOCKS_DEF = [
+      { type: "video_phone", label: "Vídeo Celular", icon: "📱", grad: "from-fuchsia-500 to-pink-600" },
+      { type: "video_cinema", label: "Vídeo Cinema", icon: "📹", grad: "from-violet-600 to-purple-700" },
+      { type: "html_embed", label: "HTML / Embed", icon: "</>", grad: "from-amber-500 to-orange-600" },
+      { type: "text_free", label: "Texto Livre", icon: "T", grad: "from-emerald-500 to-teal-600" },
+      { type: "image_single", label: "Imagem /...", icon: "🖼️", grad: "from-cyan-500 to-blue-600" },
+      { type: "gallery", label: "Galeria", icon: "🎴", grad: "from-pink-500 to-rose-600" },
+      { type: "hero", label: "Hero", icon: "🗂️", grad: "from-blue-600 to-indigo-600" },
+      { type: "impact", label: "Impacto", icon: "💥", grad: "from-rose-500 to-pink-600" },
+      { type: "features", label: "Recursos", icon: "⚡", grad: "from-sky-500 to-cyan-600" },
+      { type: "pricing", label: "Planos", icon: "🛍️", grad: "from-purple-600 to-indigo-600" },
+      { type: "faq", label: "FAQ", icon: "❓", grad: "from-indigo-500 to-violet-600" },
+      { type: "cta_final", label: "CTA Final", icon: "⚡", grad: "from-amber-400 to-yellow-500" },
+      { type: "testimonials", label: "Depoimentos", icon: "⭐", grad: "from-amber-500 to-orange-500" },
+      { type: "countdown", label: "Contador", icon: "⏱️", grad: "from-red-500 to-rose-600" },
+      { type: "form_lead", label: "Formulário", icon: "📋", grad: "from-teal-400 to-cyan-500" },
+      { type: "whatsapp_float", label: "WhatsApp", icon: "💬", grad: "from-emerald-500 to-green-600" },
+      { type: "columns_2", label: "Colunas", icon: "▥", grad: "from-slate-600 to-slate-700" },
+      { type: "before_after", label: "Antes x Depois", icon: "⇆", grad: "from-rose-500 to-fuchsia-600" },
+      { type: "logos", label: "Logos Clientes", icon: "🏢", grad: "from-sky-400 to-blue-500" },
+      { type: "numbers", label: "Números", icon: "📈", grad: "from-violet-500 to-purple-600" },
+      { type: "steps", label: "Passo a Passo", icon: "🔢", grad: "from-fuchsia-500 to-pink-600" },
+      { type: "comparison", label: "Comparativo", icon: "⊞", grad: "from-blue-500 to-indigo-600" },
+      { type: "guarantee", label: "Garantia", icon: "🛡️", grad: "from-emerald-500 to-teal-600" }
+    ];
+
+    let currentApp = {
+      name: "Guia Low Carb para Iniciantes",
+      blocks: [
+        { type: "hero", title: "Guia Low Carb para Iniciantes", subtitle: "Um caminho simples, saboroso e possível para começar hoje." },
+        { type: "video_phone", title: "Veja como funciona no celular" },
+        { type: "features", title: "O que você vai dominar" },
+        { type: "guarantee", title: "7 Dias de Garantia Incondicional" }
+      ]
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderDrawerGrid();
+      renderBlocks();
+    });
+
+    function showToast(msg, icon = "✨") {
+      const toast = document.getElementById("toast");
+      document.getElementById("toastMsg").innerText = msg;
+      document.getElementById("toastIcon").innerText = icon;
+      toast.style.transform = "translateY(0)";
+      setTimeout(() => { toast.style.transform = "translateY(-150%)"; }, 2400);
+    }
+
+    function switchMainTab(tab) {
+      ['backoffice', 'editor', 'templates'].forEach(t => {
+        const view = document.getElementById("view-" + t);
+        const btn = document.getElementById("navBtn-" + t);
+        if (view) view.classList.toggle("hidden", t !== tab);
+        if (btn) btn.className = t === tab
+          ? "px-3.5 py-1.5 rounded-full bg-white text-violet-700 shadow-sm font-extrabold flex items-center gap-1.5 transition"
+          : "px-3.5 py-1.5 rounded-full text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition";
+      });
+    }
+
+    function setBackofficeTab(t) {
+      ['bo-dash', 'bo-users', 'bo-plans', 'bo-apps', 'bo-ads', 'bo-invoices', 'bo-webhooks'].forEach(id => {
+        const el = document.getElementById("boTab-" + id);
+        const btn = document.getElementById("boTabBtn-" + id);
+        if (el) el.classList.toggle("hidden", id !== t);
+        if (btn) btn.className = id === t
+          ? "px-3.5 py-1.5 rounded-full bg-violet-600 text-white shadow-xs"
+          : "px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50";
+      });
+    }
+
+    function renderDrawerGrid() {
+      const grid = document.getElementById("drawerBlocksGrid");
+      grid.innerHTML = BLOCKS_DEF.map(b => `
+        <button onclick="addBlock('${b.type}')" class="flex flex-col items-center p-2 rounded-2xl bg-[#140A28] hover:bg-[#1E103B] border border-purple-900/30 hover:border-purple-500/60 transition group text-center">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br ${b.grad} flex items-center justify-center text-white mb-2 shadow-sm text-lg group-hover:scale-105 transition">${b.icon}</div>
+          <span class="text-[11px] font-bold text-slate-200 group-hover:text-white">${b.label}</span>
+        </button>
+      `).join('');
+    }
+
+    function renderBlocks() {
+      const c = document.getElementById("blocksContainer");
+      c.innerHTML = currentApp.blocks.map((b, idx) => `
+        <div class="p-4 rounded-2xl border border-slate-200 bg-white shadow-xs">
+          <div class="flex items-center justify-between text-[11px] font-bold text-violet-700 pb-1 mb-1 border-b">
+            <span>${b.type.toUpperCase()}</span>
+            <button onclick="removeBlock(${idx})" class="text-slate-400 hover:text-red-500">✕</button>
+          </div>
+          <h4 class="font-bold text-slate-900">${b.title || b.type}</h4>
+          <p class="text-xs text-slate-500 mt-0.5">${b.subtitle || ''}</p>
+        </div>
+      `).join('');
+    }
+
+    function addBlock(type) {
+      currentApp.blocks.push({ type, title: "Novo Bloco " + type, subtitle: "Configurado no Mini App" });
+      closeBlockDrawer();
+      renderBlocks();
+      showToast("Bloco adicionado!", "➕");
+    }
+
+    function removeBlock(idx) {
+      currentApp.blocks.splice(idx, 1);
+      renderBlocks();
+      showToast("Bloco removido");
+    }
+
+    function toggleAppStatus(id) {
+      const el = document.getElementById("appStatus-" + id);
+      if (el.innerText.includes("No Ar")) {
+        el.innerText = "● Manutenção";
+        el.className = "px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200";
+        showToast("App colocado em manutenção!", "⚠️");
+      } else {
+        el.innerText = "● No Ar";
+        el.className = "px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200";
+        showToast("App publicado e ativo!", "🚀");
+      }
+    }
+
+    function loadAppInEditor(name) {
+      currentApp.name = name;
+      document.getElementById("pageTitleDisplay").innerText = name;
+      renderBlocks();
+      switchMainTab('editor');
+      showToast("App carregado no construtor!", "🎨");
+    }
+
+    // Modals
+    function openBlockDrawer() { document.getElementById("blockDrawerModal").classList.remove("hidden"); }
+    function closeBlockDrawer() { document.getElementById("blockDrawerModal").classList.add("hidden"); }
+    function openAIKeysModal() { document.getElementById("aiKeysModal").classList.remove("hidden"); }
+    function closeAIKeysModal() { document.getElementById("aiKeysModal").classList.add("hidden"); }
+    function openConverterModal() { document.getElementById("converterModal").classList.remove("hidden"); }
+    function closeConverterModal() { document.getElementById("converterModal").classList.add("hidden"); }
+
+    function runHtmlConversion() {
+      const name = document.getElementById("convAppName").value;
+      document.getElementById("convFeedback").classList.remove("hidden");
+      setTimeout(() => {
+        closeConverterModal();
+        loadAppInEditor(name);
+        showToast("Página convertida carregada no construtor!", "⚡");
+      }, 1000);
+    }
+
+    function saveAIKeys() { closeAIKeysModal(); showToast("Chaves salvas com sucesso!", "🔑"); }
+    function saveVersion() { showToast("Versão salva localmente!", "💾"); }
+    function openPublishModal() { showToast("PWA publicado! Link exclusivo gerado.", "🚀"); }
+
+    function openFullscreenPreview() {
+      const modal = document.getElementById("fullscreenPreviewModal");
+      const frame = document.getElementById("previewFrame");
+      frame.innerHTML = currentApp.blocks.map(b => `
+        <div class="p-4 rounded-2xl bg-slate-50 border text-xs">
+          <h4 class="font-bold text-slate-900">${b.title}</h4>
+          <p class="text-slate-500 mt-1">${b.subtitle || ''}</p>
+        </div>
+      `).join('');
+      modal.classList.remove("hidden");
+    }
+    function closeFullscreenPreview() { document.getElementById("fullscreenPreviewModal").classList.add("hidden"); }
+  </script>
+</body>
+</html>
