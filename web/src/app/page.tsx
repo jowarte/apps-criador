@@ -16,6 +16,8 @@ import { Canvas } from "@/components/builder/Canvas";
 import { FloatingBar } from "@/components/builder/FloatingBar";
 import { BlockDrawer } from "@/components/builder/BlockDrawer";
 import { PropertiesPanel } from "@/components/builder/PropertiesPanel";
+import { BlockConfigModal } from "@/components/builder/BlockConfigModal";
+import { PageAndMenuManager } from "@/components/builder/PageAndMenuManager";
 import { FullScreenPreview } from "@/components/builder/FullScreenPreview";
 import { TemplatesGallery } from "@/components/builder/TemplatesGallery";
 import { AIKeysModal } from "@/components/builder/AIKeysModal";
@@ -24,7 +26,7 @@ import { EmojiGrid, IconGrid } from "@/components/builder/Pickers";
 import { TEMPLATES } from "@/lib/builder/templates";
 import { Icon } from "@/components/Icon";
 import { cn } from "@/lib/builder/utils";
-import type { BlockStyle } from "@/lib/builder/types";
+import type { Block, BlockStyle } from "@/lib/builder/types";
 
 export default function BuilderPage() {
   const {
@@ -48,8 +50,10 @@ export default function BuilderPage() {
     updateStyle,
     setTheme,
     setName,
+    setMenu,
     applyTemplate,
     addPage,
+    renamePage,
     removePage,
     setPage,
   } = useBuilder();
@@ -58,6 +62,8 @@ export default function BuilderPage() {
   const [mainTab, setMainTab] = useState<"editor" | "templates">("editor");
   const [aiKeysOpen, setAiKeysOpen] = useState(false);
   const [converterOpen, setConverterOpen] = useState(false);
+  const [pageManagerOpen, setPageManagerOpen] = useState(false);
+  const [configModalBlock, setConfigModalBlock] = useState<Block | null>(null);
 
   const [activeDragItem, setActiveDragItem] = useState<{
     label: string;
@@ -222,6 +228,15 @@ export default function BuilderPage() {
               <Icon name="Key" size={13} className="text-amber-400" />
               <span>🔑 Chaves de IA</span>
             </button>
+
+            <button
+              onClick={() => setPageManagerOpen(true)}
+              className="px-3 py-1.5 rounded-full text-pink-300 hover:text-white flex items-center gap-1.5 transition hover:bg-pink-900/30 font-bold"
+              title="Gerenciar páginas e menu de navegação do app"
+            >
+              <Icon name="Layers" size={13} className="text-pink-400" />
+              <span>📑 Páginas & Menu ({doc.pages.length})</span>
+            </button>
           </div>
 
           {/* Right Actions: Viewport, Visualizar, Publicar */}
@@ -278,6 +293,7 @@ export default function BuilderPage() {
           <main className="flex-1 overflow-y-auto bg-[#0B0714]">
             <TemplatesGallery
               onSelectTemplate={(t) => {
+                applyTemplate(t);
                 setMainTab("editor");
               }}
             />
@@ -298,14 +314,21 @@ export default function BuilderPage() {
                 onDuplicate={duplicate}
                 onToggleHidden={toggleHidden}
                 onDelete={remove}
-                onOpenProperties={() => {}}
+                onOpenProperties={(blockId) => {
+                  const b = (blockId && currentPage.blocks.find(x => x.id === blockId)) || selectedBlock;
+                  if (b) setConfigModalBlock(b);
+                }}
                 onOpenDrawer={() => setPanel("blocks")}
+                menu={doc.menu}
+                currentPageId={pageId}
+                onSelectPage={setPage}
+                onOpenMenuManager={() => setPageManagerOpen(true)}
               />
             </main>
 
             {/* Painel Lateral Direita: Propriedades do Bloco Selecionado */}
             {selectedBlock && (
-              <aside className="w-80 md:w-96 border-l border-[#2D1E51] bg-[#120A22] h-full shrink-0 z-30 shadow-2xl animate-in slide-in-from-right duration-200">
+              <aside className="w-80 md:w-96 border-l border-[#2D1E51] bg-[#120A22] h-full shrink-0 z-30 shadow-2xl flex flex-col min-h-0 overflow-y-auto">
                 <PropertiesPanel
                   block={selectedBlock}
                   theme={doc.theme}
@@ -564,6 +587,46 @@ export default function BuilderPage() {
             </div>
           ) : null}
         </DragOverlay>
+
+        {/* Modal de Configuração do Bloco Selecionado */}
+        {configModalBlock && (
+          <BlockConfigModal
+            block={configModalBlock}
+            theme={doc.theme}
+            onUpdateProps={(patch) => {
+              updateProps(configModalBlock.id, patch);
+              setConfigModalBlock({ ...configModalBlock, props: { ...configModalBlock.props, ...patch } });
+            }}
+            onUpdateStyle={(patch) => {
+              updateStyle(configModalBlock.id, patch as Partial<BlockStyle>);
+              setConfigModalBlock({ ...configModalBlock, style: { ...(configModalBlock.style || {}), ...patch } });
+            }}
+            onClose={() => setConfigModalBlock(null)}
+          />
+        )}
+
+        {/* Modal Gerenciador de Páginas & Menu de Navegação */}
+        {pageManagerOpen && (
+          <PageAndMenuManager
+            doc={doc}
+            currentPageId={pageId}
+            onSelectPage={setPage}
+            onAddPage={(name) => {
+              addPage();
+              if (name) {
+                setTimeout(() => {
+                  const state = useBuilder.getState();
+                  const last = state.doc.pages[state.doc.pages.length - 1];
+                  if (last) renamePage(last.id, name);
+                }, 50);
+              }
+            }}
+            onRenamePage={renamePage}
+            onRemovePage={removePage}
+            onUpdateMenu={setMenu}
+            onClose={() => setPageManagerOpen(false)}
+          />
+        )}
       </div>
     </DndContext>
   );

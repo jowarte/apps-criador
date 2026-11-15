@@ -7,7 +7,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Block, Theme, Device } from "@/lib/builder/types";
+import type { Block, Theme, Device, MenuConfig } from "@/lib/builder/types";
 import { BlockView, themeVars } from "@/components/blocks/BlockView";
 import { BlockToolbar } from "./BlockToolbar";
 import { cn } from "@/lib/builder/utils";
@@ -26,6 +26,10 @@ export function Canvas({
   onDelete,
   onOpenProperties,
   onOpenDrawer,
+  menu,
+  currentPageId,
+  onSelectPage,
+  onOpenMenuManager,
 }: {
   blocks: Block[];
   theme: Theme;
@@ -37,8 +41,12 @@ export function Canvas({
   onDuplicate: (id: string) => void;
   onToggleHidden: (id: string) => void;
   onDelete: (id: string) => void;
-  onOpenProperties: () => void;
+  onOpenProperties: (blockId?: string) => void;
   onOpenDrawer: () => void;
+  menu?: MenuConfig;
+  currentPageId?: string;
+  onSelectPage?: (id: string) => void;
+  onOpenMenuManager?: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: "canvas-droppable",
@@ -93,7 +101,7 @@ export function Canvas({
                     onDuplicate={() => onDuplicate(block.id)}
                     onToggleHidden={() => onToggleHidden(block.id)}
                     onDelete={() => onDelete(block.id)}
-                    onConfigure={onOpenProperties}
+                    onConfigure={() => onOpenProperties(block.id)}
                   />
                 ))}
               </SortableContext>
@@ -102,6 +110,34 @@ export function Canvas({
                 <EmptyCanvasState onOpenDrawer={onOpenDrawer} />
               )}
             </div>
+
+            {/* Menu de Navegação Inferior (Bottom Bar) do Mini App */}
+            {menu?.enabled && menu.items.length > 0 && (
+              <div className="shrink-0 bg-slate-900/95 backdrop-blur-md border-t border-white/10 px-2 py-1.5 flex items-center justify-around z-20 select-none">
+                {menu.items.map((item) => {
+                  const isActive = item.pageId === currentPageId;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectPage?.(item.pageId);
+                      }}
+                      className={cn(
+                        "flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition text-[10px] font-bold",
+                        isActive
+                          ? "text-pink-400 bg-pink-500/10 font-extrabold"
+                          : "text-slate-400 hover:text-white"
+                      )}
+                    >
+                      <Icon name={item.icon} size={18} />
+                      <span className="truncate max-w-[65px]">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Home Indicator */}
             <div className="h-4 shrink-0 flex items-center justify-center pb-1">
@@ -134,7 +170,7 @@ export function Canvas({
                   onDuplicate={() => onDuplicate(block.id)}
                   onToggleHidden={() => onToggleHidden(block.id)}
                   onDelete={() => onDelete(block.id)}
-                  onConfigure={onOpenProperties}
+                  onConfigure={() => onOpenProperties(block.id)}
                 />
               ))}
             </SortableContext>

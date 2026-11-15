@@ -34,12 +34,26 @@ export interface Theme {
   dark: boolean;
 }
 
+export interface MenuItem {
+  id: string;
+  label: string;
+  icon: string;
+  pageId: string;
+}
+
+export interface MenuConfig {
+  enabled: boolean;
+  style: "bottom_bar" | "top_bar";
+  items: MenuItem[];
+}
+
 export interface AppDocument {
   schemaVersion: 1;
   name: string;
   slug: string;
   theme: Theme;
   pages: Page[];
+  menu?: MenuConfig;
   updatedAt: string;
 }
 

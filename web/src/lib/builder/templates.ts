@@ -124,12 +124,20 @@ export const TEMPLATES: Template[] = [
 
 export function newDocument(templateId = "guia"): AppDocument {
   const t = TEMPLATES.find((x) => x.id === templateId) || TEMPLATES[0];
+  const initialPageId = uid("p");
   return {
     schemaVersion: 1,
     name: t.name,
     slug: "",
     theme: { ...DEFAULT_THEME, brand: t.brand },
-    pages: [{ id: uid("p"), name: "Início", blocks: t.blocks() }],
+    pages: [{ id: initialPageId, name: "Início", blocks: t.blocks() }],
+    menu: {
+      enabled: true,
+      style: "bottom_bar",
+      items: [
+        { id: "m-1", label: "Início", icon: "Home", pageId: initialPageId },
+      ],
+    },
     updatedAt: new Date().toISOString(),
   };
 }

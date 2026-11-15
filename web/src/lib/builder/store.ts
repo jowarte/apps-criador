@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { AppDocument, Block, BlockStyle, Device, Theme } from "./types";
+import type { AppDocument, Block, BlockStyle, Device, Theme, MenuConfig } from "./types";
 import { clone, uid } from "./utils";
 import { makeBlock, newDocument, TEMPLATES, DEFAULT_THEME, type Template } from "./templates";
 
@@ -46,6 +46,7 @@ interface BuilderState {
   toggleHidden: (id: string) => void;
   setTheme: (patch: Partial<Theme>) => void;
   setName: (name: string) => void;
+  setMenu: (menu: MenuConfig) => void;
   applyTemplate: (input: string | Template | { name?: string; brand?: string; blocks: Block[] | (() => Block[]) }) => void;
   addPage: () => void;
   renamePage: (id: string, name: string) => void;
@@ -175,6 +176,7 @@ export const useBuilder = create<BuilderState>()(
 
         setTheme: (patch) => get().mutate((d) => Object.assign(d.theme, patch), `theme:${Object.keys(patch).join(",")}`),
         setName: (name) => get().mutate((d) => void (d.name = name), "name"),
+        setMenu: (menu) => get().mutate((d) => void (d.menu = menu), "menu"),
 
         applyTemplate: (input) => {
           let t: { name?: string; brand?: string; blocks: Block[] | (() => Block[]) } | undefined;
