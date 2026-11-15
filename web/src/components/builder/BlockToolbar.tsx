@@ -14,6 +14,7 @@ export function BlockToolbar({
   onToggleHidden,
   onDelete,
   onConfigure,
+  dragHandleProps,
 }: {
   block: Block;
   canMoveUp: boolean;
@@ -24,14 +25,19 @@ export function BlockToolbar({
   onToggleHidden: () => void;
   onDelete: () => void;
   onConfigure: () => void;
+  dragHandleProps?: Record<string, any>;
 }) {
   const def = BLOCK_MAP[block.type];
 
   return (
     <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-[#140A28] border border-purple-500/40 text-white px-3 py-1.5 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_15px_rgba(168,85,247,0.3)] select-none text-xs font-bold animate-in fade-in zoom-in-95 duration-150 whitespace-nowrap">
-      {/* Block Title + Icon */}
-      <div className="flex items-center gap-1.5 text-purple-200">
-        <span className="text-slate-400">⇅</span>
+      {/* Block Title + Icon + Drag Handle */}
+      <div
+        {...(dragHandleProps || {})}
+        className="flex items-center gap-1.5 text-purple-200 cursor-grab active:cursor-grabbing px-2 py-0.5 rounded-full hover:bg-purple-900/50 transition touch-none select-none"
+        title="Arraste para mover o bloco de posição"
+      >
+        <span className="text-purple-400 font-extrabold text-sm">⠿</span>
         <Icon name={def?.icon || "Boxes"} size={13} className="text-purple-400" />
         <span className="truncate max-w-[140px] sm:max-w-none">{def?.label || block.type}</span>
       </div>

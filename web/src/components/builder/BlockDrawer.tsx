@@ -204,14 +204,13 @@ export function BlockDrawer({
 
   return (
     <div className="relative text-slate-100 select-none">
-      {/* Header instructions (1:1 with NoéPage) */}
+      {/* Header instructions */}
       <div className="text-center mb-4">
-        <h3 className="text-sm font-semibold text-slate-200">
-          Arraste para posicionar um novo bloco na página
+        <h3 className="text-sm font-extrabold text-white flex items-center justify-center gap-2">
+          <span>✨</span> Clique em um bloco para adicionar à sua página
         </h3>
-        <p className="text-xs text-slate-400 mt-0.5 flex items-center justify-center gap-1">
-          <span>💡</span> Para editar textos e imagens num bloco já existente, use{" "}
-          <span className="text-purple-400 font-bold underline">Configurar</span> nele
+        <p className="text-xs text-purple-300/80 mt-1 flex items-center justify-center gap-1">
+          <span>💡</span> O bloco será inserido no app. No celular, use <span className="text-purple-300 font-bold">Arrastar</span> ou as setas <span className="text-purple-300 font-bold">↑ Subir / ↓ Descer</span>
         </p>
       </div>
 
@@ -265,16 +264,20 @@ export function BlockDrawer({
           {NOEPAGE_BLOCKS.map((b) => (
             <button
               key={b.id}
+              type="button"
               onClick={() => onSelectBlock(b.type, b.defaultProps)}
-              className="flex flex-col items-center p-2 rounded-2xl bg-[#140A28] hover:bg-[#1E103B] border border-purple-900/30 hover:border-purple-500/60 transition group text-center"
+              className="flex flex-col items-center p-2.5 rounded-2xl bg-[#140A28] hover:bg-[#221042] border border-purple-900/30 hover:border-purple-400 transition-all duration-150 group text-center cursor-pointer active:scale-95 shadow-sm hover:shadow-purple-900/50"
             >
               <div
-                className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${b.bgGradient} flex items-center justify-center text-white mb-2 shadow-sm group-hover:scale-105 transition`}
+                className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${b.bgGradient} flex items-center justify-center text-white mb-2 shadow-md group-hover:scale-110 transition duration-150`}
               >
                 <Icon name={b.iconName} size={22} />
               </div>
               <span className="text-[11px] font-bold text-slate-200 group-hover:text-white leading-tight">
                 {b.label}
+              </span>
+              <span className="text-[9px] text-purple-400 font-semibold opacity-0 group-hover:opacity-100 transition mt-1">
+                + Adicionar
               </span>
             </button>
           ))}

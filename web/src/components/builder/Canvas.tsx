@@ -219,6 +219,18 @@ function SortableBlockItem({
         isDragging && "opacity-20 z-50"
       )}
     >
+      {/* Alça de Arraste rápida no hover */}
+      <div
+        {...attributes}
+        {...listeners}
+        onClick={(e) => e.stopPropagation()}
+        className="absolute -top-3 left-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-[#1D0C38] border border-purple-500/60 text-purple-200 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 cursor-grab active:cursor-grabbing shadow-lg touch-none select-none hover:bg-purple-900"
+        title="Arraste para mover este bloco"
+      >
+        <span className="text-purple-300 font-extrabold">⠿</span>
+        <span>Mover</span>
+      </div>
+
       {/* Block Toolbar quando selecionado */}
       {isSelected && (
         <BlockToolbar
@@ -231,6 +243,7 @@ function SortableBlockItem({
           onToggleHidden={onToggleHidden}
           onDelete={onDelete}
           onConfigure={onConfigure}
+          dragHandleProps={{ ...attributes, ...listeners }}
         />
       )}
 
