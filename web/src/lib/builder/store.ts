@@ -51,6 +51,7 @@ interface BuilderState {
   addPage: () => void;
   renamePage: (id: string, name: string) => void;
   removePage: (id: string) => void;
+  loadDoc: (doc: AppDocument) => void;
   undo: () => void;
   redo: () => void;
 }
@@ -212,6 +213,18 @@ export const useBuilder = create<BuilderState>()(
           if (get().doc.pages.length <= 1) return;
           get().mutate((d) => void (d.pages = d.pages.filter((p) => p.id !== id)));
           set({ pageId: get().doc.pages[0].id, selectedId: null });
+        },
+
+        loadDoc: (newDoc) => {
+          const firstPageId = newDoc.pages?.[0]?.id || "home";
+          set((s) => ({
+            doc: newDoc,
+            pageId: firstPageId,
+            selectedId: null,
+            past: [...s.past, s.doc].slice(-HISTORY_LIMIT),
+            future: [],
+            savedAt: Date.now(),
+          }));
         },
 
         undo: () => {

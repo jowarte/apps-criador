@@ -84,6 +84,13 @@ model Order {
   createdAt     DateTime @default(now())
 }
 
+// Armazenamento chave/valor (páginas de vendas, apps publicados, domínios)
+model KV {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
 model AISetting {
   id        String   @id @default(uuid())
   provider  String   // openai, gemini, groq, anthropic

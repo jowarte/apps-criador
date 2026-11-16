@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
+import { AiSalesEditModal } from "@/components/sales/AiSalesEditModal";
+import { DomainManagerView } from "@/components/domains/DomainManagerView";
 
 // Plano de Venda de um App (Produtor -> Cliente Final)
 export interface AppPlanItem {
@@ -61,13 +63,27 @@ export interface StudentInvoice {
 
 export default function ProducerDashboard() {
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "apps" | "clientes" | "planos" | "webhooks" | "anuncios" | "faturas" | "ia" | "config"
+    "dashboard" | "apps" | "dominios" | "clientes" | "planos" | "webhooks" | "anuncios" | "faturas" | "ia" | "config"
   >("dashboard");
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [aiSalesModalApp, setAiSalesModalApp] = useState<any | null>(null);
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const copySalesUrl = (salesSlug: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const full = `${origin}/p/${salesSlug}`;
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(full);
+      setCopiedSlug(salesSlug);
+      showToast(`Link de divulgação copiado: ${full}`);
+      setTimeout(() => setCopiedSlug(null), 2000);
+    }
   };
 
   // 1. MEUS APPS E PÁGINAS DE VENDAS (Exclusivo do Produtor)
@@ -145,16 +161,35 @@ export default function ProducerDashboard() {
     setEditCustomDomain(app.domain);
   };
 
-  const handleSavePageSettings = () => {
+  const handleSavePageSettings = async () => {
     if (!selectedAppForEdit) return;
+    const cleanPixel = editPixelId.replace(/\D/g, "");
     setProducerApps(
       producerApps.map((a) =>
         a.id === selectedAppForEdit.id
-          ? { ...a, pixelId: editPixelId, domain: editCustomDomain }
+          ? { ...a, pixelId: cleanPixel, domain: editCustomDomain }
           : a
       )
     );
-    showToast(`Configurações da Página de Vendas de "${selectedAppForEdit.name}" salvas!`);
+
+    try {
+      // Sincroniza com a API para persistência no banco
+      const res = await fetch(`/api/sales/${selectedAppForEdit.salesSlug}`);
+      if (res.ok) {
+        const current = await res.json();
+        await fetch(`/api/sales/${selectedAppForEdit.salesSlug}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...current,
+            pixelId: cleanPixel,
+            customDomain: editCustomDomain || undefined,
+          }),
+        });
+      }
+    } catch {}
+
+    showToast(`Configurações e Pixel de "${selectedAppForEdit.name}" salvos com sucesso!`);
     setSelectedAppForEdit(null);
   };
 
@@ -489,6 +524,7 @@ export default function ProducerDashboard() {
             {[
               { id: "dashboard", label: "Dashboard de Vendas", icon: "LayoutDashboard" },
               { id: "apps", label: "Meus Apps & Páginas", icon: "Smartphone", badge: producerApps.length },
+              { id: "dominios", label: "Domínios Próprios", icon: "Globe" },
               { id: "clientes", label: "Meus Clientes & Alunos", icon: "Users", badge: buyers.length },
               { id: "planos", label: "Planos & Ofertas dos Apps", icon: "Layers", badge: appPlans.length },
               { id: "webhooks", label: "Webhooks de Venda", icon: "Webhook" },
@@ -671,17 +707,40 @@ export default function ProducerDashboard() {
                           </td>
 
                           <td className="py-4 px-4">
-                            <span className="font-mono text-pink-400 font-bold bg-pink-950/40 px-2.5 py-1 rounded-md border border-pink-500/30">
-                              {app.salesUrl}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-pink-400 font-bold bg-pink-950/40 px-2.5 py-1 rounded-md border border-pink-500/30">
+                                {app.salesUrl}
+                              </span>
+                              <button
+                                onClick={() => copySalesUrl(app.salesSlug)}
+                                className="p-1.5 rounded-lg bg-purple-900/60 hover:bg-purple-800 text-purple-200 transition"
+                                title="Copiar Link de Divulgação Oficial"
+                              >
+                                <Icon
+                                  name={copiedSlug === app.salesSlug ? "Check" : "Copy"}
+                                  size={13}
+                                  className={copiedSlug === app.salesSlug ? "text-emerald-400" : ""}
+                                />
+                              </button>
+                            </div>
                           </td>
 
                           <td className="py-4 px-4">
                             {app.pixelId ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[11px]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                Pixel: {app.pixelId}
-                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[11px]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                  Pixel: {app.pixelId}
+                                </span>
+                                <Link
+                                  href={`${app.salesUrl}?debug=pixel`}
+                                  target="_blank"
+                                  className="text-[10px] bg-purple-950/60 hover:bg-purple-900 border border-purple-800 text-purple-300 px-2 py-0.5 rounded font-bold"
+                                  title="Testar eventos PageView, ViewContent e Checkout do Pixel"
+                                >
+                                  Testar
+                                </Link>
+                              </div>
                             ) : (
                               <button
                                 onClick={() => handleOpenEditPage(app)}
@@ -709,7 +768,17 @@ export default function ProducerDashboard() {
                           </td>
 
                           <td className="py-4 px-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-1.5">
+                              {/* ✨ Modificar Página com IA */}
+                              <button
+                                onClick={() => setAiSalesModalApp(app)}
+                                className="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-pink-600 to-purple-600 hover:brightness-110 text-white font-extrabold text-[11px] flex items-center gap-1 shadow-sm transition"
+                                title="Modificar Página de Vendas com Prompt de IA"
+                              >
+                                <Icon name="Sparkles" size={13} className="text-yellow-300" />
+                                <span>IA</span>
+                              </button>
+
                               {/* 👁️ Ver Página de Vendas */}
                               <Link
                                 href={app.salesUrl}
@@ -724,9 +793,9 @@ export default function ProducerDashboard() {
                               <button
                                 onClick={() => handleOpenEditPage(app)}
                                 className="w-8 h-8 rounded-lg bg-pink-900/50 hover:bg-pink-800 flex items-center justify-center text-pink-200 hover:text-white transition"
-                                title="Editar Página de Vendas e Pixel do Facebook"
+                                title="Configurar Pixel do Facebook e Domínio"
                               >
-                                <Icon name="Edit3" size={14} />
+                                <Icon name="Settings" size={14} />
                               </button>
 
                               {/* 🎨 Abrir no Construtor */}
@@ -746,6 +815,14 @@ export default function ProducerDashboard() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* TAB DOMÍNIOS PRÓPRIOS (WHITELABEL) */}
+          {activeTab === "dominios" && (
+            <DomainManagerView
+              apps={producerApps}
+              onToast={showToast}
+            />
           )}
 
           {/* TAB 3: MEUS CLIENTES & ALUNOS (CRM DO PRODUTOR) */}
@@ -1149,6 +1226,19 @@ export default function ProducerDashboard() {
               <p className="text-[10px] text-slate-400 mt-1">
                 Dispara PageView, ViewContent e InitiateCheckout automaticamente na página de vendas desse app!
               </p>
+              {editPixelId.trim() && (
+                <div className="mt-2">
+                  <a
+                    href={`${selectedAppForEdit.salesUrl}?debug=pixel`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-pink-300 hover:text-white bg-pink-950/50 hover:bg-pink-900 border border-pink-700/50 px-3 py-1.5 rounded-xl font-bold transition"
+                  >
+                    <span>🎯</span>
+                    <span>Testar Disparo do Pixel ao Vivo (?debug=pixel)</span>
+                  </a>
+                </div>
+              )}
             </div>
 
             <div>
@@ -1159,6 +1249,9 @@ export default function ProducerDashboard() {
                 placeholder="Ex: guialowcarb.com.br"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#180E2F] border border-purple-500/40 text-xs text-white outline-none"
               />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Aponte o registro tipo A para o IP <strong>187.127.28.82</strong>
+              </p>
             </div>
 
             <div className="pt-2 flex justify-end gap-2">
@@ -1177,6 +1270,19 @@ export default function ProducerDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* MODAL IA: MODIFICAR PÁGINA DE VENDAS COM PROMPT */}
+      {aiSalesModalApp && (
+        <AiSalesEditModal
+          appSlug={aiSalesModalApp.slug}
+          appName={aiSalesModalApp.name}
+          salesSlug={aiSalesModalApp.salesSlug}
+          onClose={() => setAiSalesModalApp(null)}
+          onUpdated={() => {
+            showToast(`Página de "${aiSalesModalApp.name}" modificada pela IA com sucesso!`);
+          }}
+        />
       )}
 
       {/* MODAL 2: CRIAR PLANO PARA APP ESPECÍFICO */}

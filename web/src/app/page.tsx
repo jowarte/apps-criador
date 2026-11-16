@@ -21,6 +21,7 @@ import { PageAndMenuManager } from "@/components/builder/PageAndMenuManager";
 import { FullScreenPreview } from "@/components/builder/FullScreenPreview";
 import { TemplatesGallery } from "@/components/builder/TemplatesGallery";
 import { AIKeysModal } from "@/components/builder/AIKeysModal";
+import { AiAppEditModal } from "@/components/builder/AiAppEditModal";
 import { HtmlConverterModal } from "@/components/backend/HtmlConverterModal";
 import { EmojiGrid, IconGrid } from "@/components/builder/Pickers";
 import { TEMPLATES } from "@/lib/builder/templates";
@@ -61,6 +62,7 @@ export default function BuilderPage() {
   // Abas principais do Construtor: "editor" | "templates"
   const [mainTab, setMainTab] = useState<"editor" | "templates">("editor");
   const [aiKeysOpen, setAiKeysOpen] = useState(false);
+  const [aiAppEditOpen, setAiAppEditOpen] = useState(false);
   const [converterOpen, setConverterOpen] = useState(false);
   const [pageManagerOpen, setPageManagerOpen] = useState(false);
   const [configModalBlock, setConfigModalBlock] = useState<Block | null>(null);
@@ -210,6 +212,15 @@ export default function BuilderPage() {
             >
               <Icon name="Code" size={13} className="text-orange-400" />
               <span>⚡ Converter</span>
+            </button>
+
+            <button
+              onClick={() => setAiAppEditOpen(true)}
+              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:brightness-110 text-white flex items-center gap-1.5 transition font-extrabold shadow-sm"
+              title="Modificar Mini App inteiro com Inteligência Artificial"
+            >
+              <Icon name="Sparkles" size={13} className="text-yellow-300" />
+              <span>✨ IA no App</span>
             </button>
 
             <button
@@ -450,6 +461,17 @@ export default function BuilderPage() {
         {/* MODAL DE CHAVES DE IA (BYOK) */}
         {aiKeysOpen && (
           <AIKeysModal onClose={() => setAiKeysOpen(false)} />
+        )}
+
+        {/* MODAL MODIFICAR APP COM IA */}
+        {aiAppEditOpen && (
+          <AiAppEditModal
+            onClose={() => setAiAppEditOpen(false)}
+            onOpenKeys={() => {
+              setAiAppEditOpen(false);
+              setAiKeysOpen(true);
+            }}
+          />
         )}
 
         {/* MODAL CONVERSOR DE PÁGINAS (HTML/ZIP PARA PWA) */}
