@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { useBuilder } from "@/lib/builder/store";
+import { getActiveAiKey } from "@/lib/ai/keys";
 import type { AppDocument } from "@/lib/builder/types";
 
 interface Props {
@@ -31,28 +32,7 @@ export function AiAppEditModal({ onClose, onOpenKeys }: Props) {
     setSuccess(null);
 
     try {
-      // Carregar chaves salvas localmente se houver (BYOK)
-      let customKey = "";
-      let customProvider = "";
-      try {
-        const stored = localStorage.getItem("mini_apps_ai_keys");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed.openai) {
-            customKey = parsed.openai;
-            customProvider = "openai";
-          } else if (parsed.gemini) {
-            customKey = parsed.gemini;
-            customProvider = "gemini";
-          } else if (parsed.groq) {
-            customKey = parsed.groq;
-            customProvider = "groq";
-          } else if (parsed.anthropic) {
-            customKey = parsed.anthropic;
-            customProvider = "anthropic";
-          }
-        }
-      } catch {}
+      const activeKey = getActiveAiKey();
 
       const res = await fetch("/api/ai/edit", {
         method: "POST",
@@ -61,8 +41,8 @@ export function AiAppEditModal({ onClose, onOpenKeys }: Props) {
           target: "app",
           prompt,
           current: doc,
-          customKey: customKey || undefined,
-          customProvider: customProvider || undefined,
+          apiKey: activeKey?.apiKey,
+          provider: activeKey?.provider,
         }),
       });
 
@@ -71,7 +51,7 @@ export function AiAppEditModal({ onClose, onOpenKeys }: Props) {
         throw new Error(data.error || "Falha ao processar com IA.");
       }
 
-      const updated = data.data as AppDocument;
+      const updated = (data.data || data.result) as AppDocument;
       loadDoc(updated);
       setSuccess("Mini App atualizado com sucesso pela IA! Verifique as páginas e blocos.");
       setTimeout(() => {

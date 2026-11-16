@@ -14,35 +14,62 @@ function PwaContent({ params }: { params: Promise<{ slug: string }> }) {
   const [activePageId, setActivePageId] = useState<string>("p1");
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("mineapps-builder-v1");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed?.state?.doc) {
-          setDoc(parsed.state.doc);
-          setActivePageId(parsed.state.doc.pages[0]?.id || "p1");
-          return;
-        }
-      }
-    } catch {}
+    let cancelled = false;
 
-    // Fallback template
-    const initialPages = [
-      { id: "p1", name: "Início", blocks: template.blocks() },
-    ];
-    setDoc({
-      schemaVersion: 1,
-      name: template.name,
-      slug: slug,
-      theme: { ...DEFAULT_THEME, brand: template.brand },
-      pages: initialPages,
-      menu: {
-        enabled: true,
-        style: "bottom_bar",
-        items: [{ id: "m1", label: "Início", icon: "Home", pageId: "p1" }],
-      },
-      updatedAt: new Date().toISOString(),
-    });
+    async function loadApp() {
+      // 1. Tenta carregar do servidor/banco via API
+      try {
+        const res = await fetch(`/api/apps/${encodeURIComponent(slug)}`, { cache: "no-store" });
+        if (res.ok) {
+          const remoteDoc: AppDocument = await res.json();
+          if (!cancelled && remoteDoc && remoteDoc.pages?.length) {
+            setDoc(remoteDoc);
+            setActivePageId(remoteDoc.pages[0].id);
+            return;
+          }
+        }
+      } catch {}
+
+      // 2. Se for o próprio criador no mesmo navegador, tenta o rascunho local
+      try {
+        const saved = localStorage.getItem("mineapps-builder-v1");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed?.state?.doc && (!parsed.state.doc.slug || parsed.state.doc.slug === slug)) {
+            if (!cancelled) {
+              setDoc(parsed.state.doc);
+              setActivePageId(parsed.state.doc.pages[0]?.id || "p1");
+              return;
+            }
+          }
+        }
+      } catch {}
+
+      // 3. Fallback inteligente para o template correspondente
+      if (!cancelled) {
+        const initialPages = [
+          { id: "p1", name: "Início", blocks: template.blocks() },
+        ];
+        setDoc({
+          schemaVersion: 1,
+          name: template.name,
+          slug: slug,
+          theme: { ...DEFAULT_THEME, brand: template.brand },
+          pages: initialPages,
+          menu: {
+            enabled: true,
+            style: "bottom_bar",
+            items: [{ id: "m1", label: "Início", icon: "Home", pageId: "p1" }],
+          },
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    loadApp();
+    return () => {
+      cancelled = true;
+    };
   }, [slug, template]);
 
   if (!doc) {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
+import { getActiveAiKey } from "@/lib/ai/keys";
 import type { SalesPageData } from "@/lib/sales/types";
 
 interface Props {
@@ -44,31 +45,9 @@ export function AiSalesEditModal({
         throw new Error("Não foi possível carregar a página de vendas atual.");
       }
       const currentData = await currentRes.json();
+      const activeKey = getActiveAiKey();
 
-      // 2. Chaves de IA se houver
-      let customKey = "";
-      let customProvider = "";
-      try {
-        const stored = localStorage.getItem("mini_apps_ai_keys");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed.openai) {
-            customKey = parsed.openai;
-            customProvider = "openai";
-          } else if (parsed.gemini) {
-            customKey = parsed.gemini;
-            customProvider = "gemini";
-          } else if (parsed.groq) {
-            customKey = parsed.groq;
-            customProvider = "groq";
-          } else if (parsed.anthropic) {
-            customKey = parsed.anthropic;
-            customProvider = "anthropic";
-          }
-        }
-      } catch {}
-
-      // 3. Enviar prompt para API de IA
+      // 2. Enviar prompt para API de IA
       const aiRes = await fetch("/api/ai/edit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,8 +55,8 @@ export function AiSalesEditModal({
           target: "sales",
           prompt,
           current: currentData,
-          customKey: customKey || undefined,
-          customProvider: customProvider || undefined,
+          apiKey: activeKey?.apiKey,
+          provider: activeKey?.provider,
         }),
       });
 
@@ -86,7 +65,7 @@ export function AiSalesEditModal({
         throw new Error(aiResult.error || "Falha ao gerar alterações com IA.");
       }
 
-      const updatedPage: SalesPageData = aiResult.data;
+      const updatedPage: SalesPageData = aiResult.data || aiResult.result;
 
       // 4. Salvar na API de vendas para persistir
       const saveRes = await fetch(`/api/sales/${salesSlug}`, {

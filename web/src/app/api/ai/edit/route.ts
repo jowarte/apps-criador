@@ -115,29 +115,37 @@ export async function POST(req: Request) {
     current: unknown;
     provider?: Provider;
     apiKey?: string;
+    customKey?: string;
+    customProvider?: Provider;
     blockCatalog?: string;
   };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "JSON inválido" }, { status: 400 });
   }
 
-  if (!body.prompt?.trim()) return NextResponse.json({ error: "Escreva o que a IA deve modificar." }, { status: 400 });
+  if (!body.prompt?.trim()) {
+    return NextResponse.json({ ok: false, error: "Escreva o que a IA deve modificar." }, { status: 400 });
+  }
 
-  // Escolhe provedor: chave enviada pelo usuário > chave do servidor
+  const rawKey = (body.apiKey || body.customKey)?.trim();
+  const rawProvider = body.provider || body.customProvider;
+
+  // Escolhe provedor: chave enviada pelo usuário (BYOK) > chave do servidor
   const order: Provider[] = ["gemini", "openai", "groq", "anthropic"];
-  let provider: Provider | undefined = body.apiKey ? body.provider || "gemini" : undefined;
-  let apiKey = body.apiKey?.trim();
+  let provider: Provider | undefined = rawKey ? rawProvider || "gemini" : undefined;
+  let apiKey = rawKey;
   if (!apiKey) {
-    provider = (body.provider && ENV_KEYS[body.provider] ? body.provider : order.find((p) => ENV_KEYS[p])) as Provider | undefined;
+    provider = (rawProvider && ENV_KEYS[rawProvider] ? rawProvider : order.find((p) => ENV_KEYS[p])) as Provider | undefined;
     apiKey = provider ? ENV_KEYS[provider] : undefined;
   }
   if (!provider || !apiKey) {
     return NextResponse.json(
       {
+        ok: false,
         error:
-          "Nenhuma chave de IA configurada. Cole sua chave (Gemini, OpenAI, Groq ou Anthropic) no campo da IA, ou configure GEMINI_API_KEY nas variáveis de ambiente do Dokploy.",
+          "Nenhuma chave de IA configurada. Cole sua chave (Gemini, OpenAI, Groq ou Anthropic) no menu de Chaves de IA ou passe como variável de ambiente no Dokploy.",
       },
       { status: 400 }
     );
@@ -149,8 +157,11 @@ export async function POST(req: Request) {
   try {
     const text = await callAI(provider, apiKey, system, user);
     const result = extractJson(text);
-    return NextResponse.json({ result, provider });
+    return NextResponse.json({ ok: true, result, data: result, provider });
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Falha ao chamar a IA" }, { status: 502 });
+    return NextResponse.json(
+      { ok: false, error: e instanceof Error ? e.message : "Falha ao chamar a IA" },
+      { status: 502 }
+    );
   }
 }

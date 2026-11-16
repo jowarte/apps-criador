@@ -27,6 +27,7 @@ import { EmojiGrid, IconGrid } from "@/components/builder/Pickers";
 import { TEMPLATES } from "@/lib/builder/templates";
 import { Icon } from "@/components/Icon";
 import { cn } from "@/lib/builder/utils";
+import { slugify } from "@/lib/sales/types";
 import type { Block, BlockStyle } from "@/lib/builder/types";
 
 export default function BuilderPage() {
@@ -123,6 +124,18 @@ export default function BuilderPage() {
         moveBlock(oldIndex, newIndex);
       }
     }
+  };
+
+  const handleOpenPublish = async () => {
+    const slug = doc.slug || slugify(doc.name) || "meu-app";
+    try {
+      await fetch(`/api/apps/${encodeURIComponent(slug)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...doc, slug }),
+      });
+    } catch {}
+    setPublishModal(true);
   };
 
   const copyAppUrl = () => {
@@ -281,7 +294,7 @@ export default function BuilderPage() {
             </button>
 
             <button
-              onClick={() => setPublishModal(true)}
+              onClick={handleOpenPublish}
               className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#059669] to-[#10B981] text-white text-xs font-extrabold hover:brightness-110 shadow-lg shadow-emerald-700/30 transition flex items-center gap-1.5"
             >
               <Icon name="Rocket" size={13} />

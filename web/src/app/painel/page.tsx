@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { AiSalesEditModal } from "@/components/sales/AiSalesEditModal";
 import { DomainManagerView } from "@/components/domains/DomainManagerView";
+import { saveAiKey, getStoredAiKeys, type AIProvider } from "@/lib/ai/keys";
 
 // Plano de Venda de um App (Produtor -> Cliente Final)
 export interface AppPlanItem {
@@ -437,10 +438,41 @@ export default function ProducerDashboard() {
 
   // 6. CHAVES DE IA DO PRODUTOR (BYOK)
   const [producerAiKeys, setProducerAiKeys] = useState([
-    { provider: "OpenAI", key: "sk-••••••••99Aa", status: "Conectado" },
-    { provider: "Google Gemini", key: "", status: "Não configurado" },
-    { provider: "Groq Cloud", key: "", status: "Não configurado" },
+    { provider: "OpenAI", provId: "openai" as AIProvider, key: "", status: "Não configurado" },
+    { provider: "Google Gemini", provId: "gemini" as AIProvider, key: "", status: "Não configurado" },
+    { provider: "Groq Cloud", provId: "groq" as AIProvider, key: "", status: "Não configurado" },
+    { provider: "Anthropic Claude", provId: "anthropic" as AIProvider, key: "", status: "Não configurado" },
   ]);
+
+  useEffect(() => {
+    const stored = getStoredAiKeys();
+    setProducerAiKeys([
+      {
+        provider: "OpenAI",
+        provId: "openai",
+        key: stored.keys?.openai?.key || stored.openai || "",
+        status: (stored.keys?.openai?.key || stored.openai) ? "Conectado" : "Não configurado",
+      },
+      {
+        provider: "Google Gemini",
+        provId: "gemini",
+        key: stored.keys?.gemini?.key || stored.gemini || "",
+        status: (stored.keys?.gemini?.key || stored.gemini) ? "Conectado" : "Não configurado",
+      },
+      {
+        provider: "Groq Cloud",
+        provId: "groq",
+        key: stored.keys?.groq?.key || stored.groq || "",
+        status: (stored.keys?.groq?.key || stored.groq) ? "Conectado" : "Não configurado",
+      },
+      {
+        provider: "Anthropic Claude",
+        provId: "anthropic",
+        key: stored.keys?.anthropic?.key || stored.anthropic || "",
+        status: (stored.keys?.anthropic?.key || stored.anthropic) ? "Conectado" : "Não configurado",
+      },
+    ]);
+  }, []);
 
   // 7. WEBHOOKS DE VENDA
   const webhookUrl = `${typeof window !== "undefined" ? window.location.origin : "https://mineapps.187.127.28.82.nip.io"}/api/webhooks/vendas`;
@@ -1158,17 +1190,31 @@ export default function ProducerDashboard() {
                   <div key={idx} className="p-5 rounded-2xl bg-[#140A28] border border-purple-500/30 space-y-3">
                     <div className="flex items-center justify-between">
                       <h3 className="font-extrabold text-white text-base">{item.provider}</h3>
-                      <span className="text-[10px] font-bold text-emerald-400">{item.status}</span>
+                      <span className={`text-[10px] font-bold ${item.key ? "text-emerald-400" : "text-slate-500"}`}>
+                        {item.key ? "✓ Conectado" : "Não configurado"}
+                      </span>
                     </div>
                     <input
                       type="password"
                       placeholder={`Insira sua API Key da ${item.provider}...`}
-                      defaultValue={item.key}
-                      className="w-full px-3 py-2 rounded-xl bg-[#180E2F] border border-purple-500/30 text-xs text-white outline-none"
+                      value={item.key}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setProducerAiKeys((prev) =>
+                          prev.map((k, i) => (i === idx ? { ...k, key: val } : k))
+                        );
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#180E2F] border border-purple-500/30 text-xs text-white outline-none focus:border-pink-500"
                     />
                     <button
-                      onClick={() => showToast(`Chave da ${item.provider} salva para os seus apps!`)}
-                      className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs"
+                      onClick={() => {
+                        saveAiKey(item.provId, item.key);
+                        setProducerAiKeys((prev) =>
+                          prev.map((k, i) => (i === idx ? { ...k, status: k.key ? "Conectado" : "Não configurado" } : k))
+                        );
+                        showToast(`Chave da ${item.provider} salva e ativa no Construtor e Painel!`);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition"
                     >
                       Salvar Chave
                     </button>

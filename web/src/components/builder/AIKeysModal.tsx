@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Icon } from "@/components/Icon";
+import { saveAiKey, getStoredAiKeys, type AIProvider } from "@/lib/ai/keys";
 
 export interface AIProviderConfig {
   id: string;
@@ -82,14 +83,22 @@ export function AIKeysModal({ onClose }: { onClose: () => void }) {
   const [savedToast, setSavedToast] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("mineapps_ai_keys");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.keys) setKeys(parsed.keys);
-        if (parsed.byokActive !== undefined) setByokActive(parsed.byokActive);
-      } catch (e) {}
+    const saved = getStoredAiKeys();
+    if (saved.keys) {
+      setKeys((prev) => {
+        const next = { ...prev };
+        Object.entries(saved.keys || {}).forEach(([p, val]) => {
+          if (val) {
+            next[p] = {
+              key: val.key || "",
+              model: val.model || prev[p]?.model || "",
+            };
+          }
+        });
+        return next;
+      });
     }
+    if (saved.byokActive !== undefined) setByokActive(saved.byokActive);
   }, []);
 
   const handleKeyChange = (providerId: string, val: string) => {
@@ -127,10 +136,11 @@ export function AIKeysModal({ onClose }: { onClose: () => void }) {
   };
 
   const saveSettings = () => {
-    localStorage.setItem(
-      "mineapps_ai_keys",
-      JSON.stringify({ keys, byokActive, updatedAt: new Date().toISOString() })
-    );
+    Object.entries(keys).forEach(([prov, item]) => {
+      if (item.key?.trim()) {
+        saveAiKey(prov as AIProvider, item.key, item.model);
+      }
+    });
     setSavedToast(true);
     setTimeout(() => {
       setSavedToast(false);
