@@ -151,13 +151,13 @@ export default function BuilderPage() {
       {/* Container Principal: Fundo Dark Purple Elegante (idêntico ao /admapps) */}
       <div className="min-h-screen bg-[#0B0714] text-[#F8F5FF] flex flex-col relative select-none font-sans">
         
-        {/* TOP NAVBAR (Dark Purple Glass SaaS) */}
-        <header className="sticky top-0 z-30 h-16 bg-[#0E0820]/95 backdrop-blur-md border-b border-[#2D1E51] px-3 sm:px-6 flex items-center justify-between gap-2 shadow-lg shadow-black/40">
+        {/* TOP NAVBAR (Verde Escuro de Alta Visibilidade e Contraste) */}
+        <header className="sticky top-0 z-30 h-16 bg-[#042017]/95 backdrop-blur-md border-b border-[#0A4D38] px-3 sm:px-6 flex items-center justify-between gap-2 shadow-lg shadow-black/50">
           {/* Left Brand and App Name */}
           <div className="flex items-center gap-2.5 shrink-0">
             <Link
               href="/painel"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-pink-600 to-purple-600 text-white text-xs font-bold hover:brightness-110 transition shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold hover:brightness-110 transition shadow-sm"
               title="Voltar para o Painel do Produtor"
             >
               <Icon name="ArrowLeft" size={13} />
@@ -165,27 +165,27 @@ export default function BuilderPage() {
             </Link>
 
             <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-white ml-1">
-              <span className="w-2 h-2 rounded-full bg-[#EC4899] animate-pulse"></span>
-              <span className="text-[#C7B9E8] font-bold">NoéPage</span>
-              <span className="text-[#6C5B96]">•</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse shadow-sm shadow-[#10B981]"></span>
+              <span className="text-[#A7F3D0] font-bold">NoéPage</span>
+              <span className="text-[#0D5C43]">•</span>
               <input
                 value={doc.name}
                 onChange={(e) => setName(e.target.value)}
-                className="font-extrabold text-xs text-white bg-transparent border-b border-transparent hover:border-[#3E2B6D] focus:border-[#7C3AED] outline-none truncate max-w-[180px]"
+                className="font-extrabold text-xs text-white bg-transparent border-b border-transparent hover:border-[#10B981]/50 focus:border-[#10B981] outline-none truncate max-w-[180px]"
                 placeholder="Nome do Mini App"
               />
             </div>
           </div>
 
-          {/* Center Navigation Tabs: Construtor, Templates, Converter, AI Keys */}
-          <div className="flex items-center bg-[#170E2F] border border-[#2D1E51] p-1 rounded-full text-xs font-bold shadow-inner">
+          {/* Center Navigation Tabs: Barra de Ferramentas Verde Escuro */}
+          <div className="flex items-center bg-[#062A1E] border border-[#10B981]/50 p-1 rounded-full text-xs font-bold shadow-inner shadow-black/60">
             <button
               onClick={() => setMainTab("editor")}
               className={cn(
-                "px-3 py-1.5 rounded-full flex items-center gap-1.5 transition",
+                "px-3.5 py-1.5 rounded-full flex items-center gap-1.5 transition",
                 mainTab === "editor"
-                  ? "bg-[#7C3AED] text-white shadow-md shadow-[#7C3AED]/20 font-extrabold"
-                  : "text-[#C7B9E8] hover:text-white"
+                  ? "bg-gradient-to-r from-[#059669] to-[#10B981] text-white shadow-md shadow-[#10B981]/30 font-extrabold"
+                  : "text-[#A7F3D0] hover:text-white hover:bg-[#08412F]"
               )}
             >
               <Icon name="Edit3" size={13} />
@@ -195,10 +195,10 @@ export default function BuilderPage() {
             <button
               onClick={() => setMainTab("templates")}
               className={cn(
-                "px-3 py-1.5 rounded-full flex items-center gap-1.5 transition",
+                "px-3.5 py-1.5 rounded-full flex items-center gap-1.5 transition",
                 mainTab === "templates"
-                  ? "bg-[#7C3AED] text-white shadow-md shadow-[#7C3AED]/20 font-extrabold"
-                  : "text-[#C7B9E8] hover:text-white"
+                  ? "bg-gradient-to-r from-[#059669] to-[#10B981] text-white shadow-md shadow-[#10B981]/30 font-extrabold"
+                  : "text-[#A7F3D0] hover:text-white hover:bg-[#08412F]"
               )}
             >
               <Icon name="LayoutTemplate" size={13} />
@@ -207,36 +207,36 @@ export default function BuilderPage() {
 
             <button
               onClick={() => setConverterOpen(true)}
-              className="px-3 py-1.5 rounded-full text-[#C7B9E8] hover:text-white flex items-center gap-1.5 transition hover:bg-white/10"
+              className="px-3 py-1.5 rounded-full text-[#A7F3D0] hover:text-white flex items-center gap-1.5 transition hover:bg-[#08412F]"
               title="Converter página de vendas HTML/ZIP para PWA"
             >
-              <Icon name="Code" size={13} className="text-orange-400" />
+              <Icon name="Code" size={13} className="text-amber-300" />
               <span>⚡ Converter</span>
             </button>
 
             <button
               onClick={() => setAiAppEditOpen(true)}
-              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:brightness-110 text-white flex items-center gap-1.5 transition font-extrabold shadow-sm"
+              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:brightness-110 text-white flex items-center gap-1.5 transition font-extrabold shadow-sm"
               title="Modificar Mini App inteiro com Inteligência Artificial"
             >
-              <Icon name="Sparkles" size={13} className="text-yellow-300" />
+              <Icon name="Sparkles" size={13} className="text-yellow-200" />
               <span>✨ IA no App</span>
             </button>
 
             <button
               onClick={() => setAiKeysOpen(true)}
-              className="px-3 py-1.5 rounded-full text-[#C7B9E8] hover:text-white flex items-center gap-1.5 transition hover:bg-white/10"
+              className="px-3 py-1.5 rounded-full text-[#A7F3D0] hover:text-white flex items-center gap-1.5 transition hover:bg-[#08412F]"
             >
-              <Icon name="Key" size={13} className="text-amber-400" />
+              <Icon name="Key" size={13} className="text-amber-300" />
               <span>🔑 Chaves de IA</span>
             </button>
 
             <button
               onClick={() => setPageManagerOpen(true)}
-              className="px-3 py-1.5 rounded-full text-pink-300 hover:text-white flex items-center gap-1.5 transition hover:bg-pink-900/30 font-bold"
+              className="px-3 py-1.5 rounded-full text-emerald-300 hover:text-white flex items-center gap-1.5 transition hover:bg-[#08412F] font-bold"
               title="Gerenciar páginas e menu de navegação do app"
             >
-              <Icon name="Layers" size={13} className="text-pink-400" />
+              <Icon name="Layers" size={13} className="text-emerald-400" />
               <span>📑 Páginas & Menu ({doc.pages.length})</span>
             </button>
           </div>
@@ -244,14 +244,14 @@ export default function BuilderPage() {
           {/* Right Actions: Viewport, Visualizar, Publicar */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Viewport switch (Desktop / Mobile) */}
-            <div className="hidden sm:flex items-center bg-[#170E2F] border border-[#2D1E51] p-0.5 rounded-full text-xs">
+            <div className="hidden sm:flex items-center bg-[#062A1E] border border-[#0A4D38] p-0.5 rounded-full text-xs">
               <button
                 onClick={() => setDevice("desktop")}
                 className={cn(
                   "px-2.5 py-1 rounded-full transition flex items-center gap-1 font-semibold",
                   device === "desktop"
-                    ? "bg-[#2D1E51] text-white shadow-xs font-bold"
-                    : "text-[#8F7EB6] hover:text-white"
+                    ? "bg-[#047857] text-white shadow-xs font-bold"
+                    : "text-[#6EE7B7] hover:text-white"
                 )}
               >
                 <Icon name="Monitor" size={12} />
@@ -262,8 +262,8 @@ export default function BuilderPage() {
                 className={cn(
                   "px-2.5 py-1 rounded-full transition flex items-center gap-1 font-semibold",
                   device === "mobile"
-                    ? "bg-[#2D1E51] text-white shadow-xs font-bold"
-                    : "text-[#8F7EB6] hover:text-white"
+                    ? "bg-[#047857] text-white shadow-xs font-bold"
+                    : "text-[#6EE7B7] hover:text-white"
                 )}
               >
                 <Icon name="Smartphone" size={12} />
@@ -273,16 +273,16 @@ export default function BuilderPage() {
 
             <button
               onClick={() => setPreview(true)}
-              className="px-3.5 py-1.5 rounded-full bg-[#231743] hover:bg-[#2F1F5A] text-white text-xs font-bold transition flex items-center gap-1.5 border border-[#3E2B6D]"
+              className="px-3.5 py-1.5 rounded-full bg-[#083D2C] hover:bg-[#0B4F39] text-white text-xs font-bold transition flex items-center gap-1.5 border border-[#10B981]/40 shadow-sm"
               title="Abrir prévia tamanho total da página"
             >
-              <Icon name="Eye" size={14} className="text-[#EC4899]" />
+              <Icon name="Eye" size={14} className="text-[#34D399]" />
               <span>Visualizar</span>
             </button>
 
             <button
               onClick={() => setPublishModal(true)}
-              className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-xs font-extrabold hover:brightness-110 shadow-lg shadow-[#7C3AED]/20 transition flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#059669] to-[#10B981] text-white text-xs font-extrabold hover:brightness-110 shadow-lg shadow-emerald-700/30 transition flex items-center gap-1.5"
             >
               <Icon name="Rocket" size={13} />
               <span>Publicar</span>
@@ -438,13 +438,18 @@ export default function BuilderPage() {
                         className="text-left p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition group"
                       >
                         <div
-                          className="h-16 rounded-xl p-2.5 flex flex-col justify-between mb-2 text-white"
-                          style={{ background: t.grad }}
+                          className="h-20 rounded-xl p-2.5 flex flex-col justify-between mb-2 text-white relative overflow-hidden"
+                          style={{
+                            background: t.grad,
+                            backgroundImage: t.cover ? `linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0.2)), url(${t.cover})` : undefined,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }}
                         >
-                          <span className="text-xs font-bold uppercase tracking-wider opacity-80">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-md self-start border border-white/10">
                             {t.cat}
                           </span>
-                          <span className="text-2xl">{t.emoji}</span>
+                          <span className="text-xl self-end drop-shadow">{t.emoji}</span>
                         </div>
                         <p className="font-extrabold text-xs text-white group-hover:text-violet-400">
                           {t.name}

@@ -23,6 +23,7 @@ export interface Template {
   emoji: string;
   grad: string;
   brand: string;
+  cover?: string;
   blocks: () => Block[];
 }
 
@@ -34,6 +35,7 @@ export const TEMPLATES: Template[] = [
     emoji: "🥑",
     grad: "linear-gradient(135deg,#7c3aed,#d946ef)",
     brand: "#7C3AED",
+    cover: "/covers/guia-lowcarb.jpg",
     blocks: () => [
       makeBlock("capa", { badge: "GUIA • LOW CARB", title: "Guia Low Carb para Iniciantes", subtitle: "Um caminho simples, saboroso e possível para começar hoje.", emoji: "🥑", ctaLabel: "Começar o guia" }),
       makeBlock("colunas", {}),
@@ -49,6 +51,7 @@ export const TEMPLATES: Template[] = [
     emoji: "🔥",
     grad: "linear-gradient(135deg,#ec4899,#fb923c)",
     brand: "#EC4899",
+    cover: "/covers/desafio-fitness.jpg",
     blocks: () => [
       makeBlock("capa", { badge: "DESAFIO", title: "Desafio 7 Dias: crie sua rotina", subtitle: "Pequenos rituais, grandes mudanças.", emoji: "🔥", ctaLabel: "Entrar no desafio" }),
       makeBlock("contador", { title: "O desafio começa em", minutes: 1440 }),
@@ -64,6 +67,7 @@ export const TEMPLATES: Template[] = [
     emoji: "🎯",
     grad: "linear-gradient(135deg,#f97316,#fbbf24)",
     brand: "#F97316",
+    cover: "/covers/quiz-vendas.jpg",
     blocks: () => [
       makeBlock("emoji", { emoji: "🎯", size: 72 }, { align: "center" }),
       makeBlock("titulo", { text: "Descubra o plano ideal para você", size: "lg" }, { align: "center" }),
@@ -79,6 +83,7 @@ export const TEMPLATES: Template[] = [
     emoji: "🎓",
     grad: "linear-gradient(135deg,#4f46e5,#8b5cf6)",
     brand: "#6D28D9",
+    cover: "/covers/mini-curso.jpg",
     blocks: () => [
       makeBlock("capa", { badge: "MINI APP • MINI CURSO", title: "Mini Curso", subtitle: "Aprenda o essencial em aulas curtas e diretas.", emoji: "🎓" }),
       makeBlock("video", { title: "Aula 1: O método em 12 minutos" }),
@@ -95,6 +100,7 @@ export const TEMPLATES: Template[] = [
     emoji: "✨",
     grad: "linear-gradient(135deg,#c026d3,#ec4899)",
     brand: "#C026D3",
+    cover: "/covers/pagina-oferta.jpg",
     blocks: () => [
       makeBlock("capa", { badge: "OFERTA ESPECIAL", title: "Transforme seu link na bio em uma máquina de vendas", emoji: "🚀" }),
       makeBlock("video", { format: "9/16", title: "Veja em 30 segundos" }),
@@ -113,6 +119,7 @@ export const TEMPLATES: Template[] = [
     emoji: "🔗",
     grad: "linear-gradient(135deg,#ec4899,#8b5cf6)",
     brand: "#DB2777",
+    cover: "/covers/hub-links.jpg",
     blocks: () => [
       makeBlock("emoji", { emoji: "👩‍💻", size: 72, label: "@seuperfil", animation: "none" }, { align: "center" }),
       makeBlock("texto", { title: "", text: "Todos os meus links em um lugar só." }, { align: "center" }),

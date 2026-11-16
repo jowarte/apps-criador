@@ -96,6 +96,7 @@ export default function ProducerDashboard() {
       salesUrl: "/p/guia-lowcarb",
       pwaUrl: "/a/guia-lowcarb",
       domain: "guialowcarb.com",
+      cover: "/covers/guia-lowcarb.jpg",
       status: "NO AR",
       pixelId: "9482910394812",
       buyersCount: 1423,
@@ -111,6 +112,7 @@ export default function ProducerDashboard() {
       salesUrl: "/p/metodo-foco",
       pwaUrl: "/a/metodo-foco",
       domain: "metodofoco.com.br",
+      cover: "/covers/quiz-vendas.jpg",
       status: "NO AR",
       pixelId: "1283948291039",
       buyersCount: 891,
@@ -126,6 +128,7 @@ export default function ProducerDashboard() {
       salesUrl: "/p/treino-casa",
       pwaUrl: "/a/treino-casa",
       domain: "treinocasa.app",
+      cover: "/covers/desafio-fitness.jpg",
       status: "NO AR",
       pixelId: "4829104829102",
       buyersCount: 431,
@@ -141,6 +144,7 @@ export default function ProducerDashboard() {
       salesUrl: "/p/ingles-zero",
       pwaUrl: "/a/ingles-zero",
       domain: "inglesfluente.com",
+      cover: "/covers/mini-curso.jpg",
       status: "RASCUNHO",
       pixelId: "",
       buyersCount: 0,
@@ -696,8 +700,16 @@ export default function ProducerDashboard() {
                         <tr key={app.id} className="hover:bg-[#1E113B] transition">
                           <td className="py-4 px-4 font-bold text-white">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-xl bg-purple-900/60 border border-purple-500/40 flex items-center justify-center text-purple-300">
-                                <Icon name="Smartphone" size={16} />
+                              <div className="w-10 h-10 rounded-xl overflow-hidden border border-purple-500/40 relative shrink-0 shadow-sm bg-purple-950 flex items-center justify-center">
+                                {app.cover ? (
+                                  <img
+                                    src={app.cover}
+                                    alt={app.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Icon name="Smartphone" size={16} className="text-purple-300" />
+                                )}
                               </div>
                               <div>
                                 <p className="font-extrabold text-sm">{app.name}</p>

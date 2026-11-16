@@ -160,29 +160,36 @@ export function TemplatesGallery({
               key={t.id}
               className="group bg-[#180E30] rounded-3xl border border-[#2D1E51] hover:border-[#7C3AED]/60 shadow-lg transition-all duration-300 overflow-hidden flex flex-col"
             >
-              {/* Template Card Banner */}
+              {/* Template Card Banner com Capa Ilustrativa por Nicho */}
               <div
-                className="h-44 p-6 flex flex-col justify-between relative overflow-hidden"
+                className="h-48 relative overflow-hidden flex flex-col justify-between p-5"
                 style={{ background: t.grad }}
               >
-                <div className="flex items-center justify-between z-10">
-                  <span className="px-3 py-1 rounded-full bg-black/25 backdrop-blur-md text-white text-[11px] font-extrabold uppercase tracking-wider">
+                {t.cover && (
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110"
+                    style={{ backgroundImage: `url(${t.cover})` }}
+                  />
+                )}
+                {/* Overlay degradê para máxima legibilidade */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#180E30] via-black/45 to-black/35 z-1" />
+
+                <div className="flex items-center justify-between z-10 relative">
+                  <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-md text-white text-[11px] font-extrabold uppercase tracking-wider border border-white/10">
                     {t.cat}
                   </span>
-                  <span className="text-3xl filter drop-shadow">{t.emoji}</span>
+                  <span className="text-2xl filter drop-shadow bg-black/40 p-1.5 rounded-xl backdrop-blur-sm border border-white/10">{t.emoji}</span>
                 </div>
 
-                <div className="z-10">
-                  <h3 className="text-xl font-black text-white leading-tight drop-shadow-sm">
+                <div className="z-10 relative">
+                  <h3 className="text-xl font-black text-white leading-tight drop-shadow-md">
                     {t.name}
                   </h3>
-                  <p className="text-xs text-white/90 font-medium mt-1">
-                    {sampleBlocks.length} blocos prontos integrados
+                  <p className="text-xs text-white/90 font-medium mt-1 drop-shadow-sm flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>{sampleBlocks.length} blocos prontos integrados</span>
                   </p>
                 </div>
-
-                {/* Decorative circles */}
-                <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
               </div>
 
               {/* Card Body */}
@@ -254,6 +261,21 @@ export function TemplatesGallery({
                 ✕
               </button>
             </div>
+
+            {previewTemplate.cover && (
+              <div className="mt-4 rounded-2xl overflow-hidden h-36 relative border border-white/10 shrink-0">
+                <img
+                  src={previewTemplate.cover}
+                  alt={previewTemplate.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-3">
+                  <span className="text-xs font-bold text-white drop-shadow">
+                    Capa Ilustrativa Oficial • Nicho {previewTemplate.cat}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto py-4 space-y-3">
               {previewTemplate.blocks().map((b, idx) => (
