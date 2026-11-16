@@ -156,19 +156,10 @@ export default function BuilderPage() {
             <Link
               href="/painel"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-pink-600 to-purple-600 text-white text-xs font-bold hover:brightness-110 transition shadow-sm"
-              title="Ir para o Painel do Produtor (Meus Apps, Vendas & Páginas)"
+              title="Voltar para o Painel do Produtor"
             >
-              <Icon name="ShoppingBag" size={13} />
-              <span>← Painel do Produtor</span>
-            </Link>
-
-            <Link
-              href="/admapps"
-              className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold hover:bg-amber-500/25 transition"
-              title="Ir para o Painel Super Admin (Dono da Plataforma)"
-            >
-              <Icon name="Crown" size={12} />
-              <span>Super Admin</span>
+              <Icon name="ArrowLeft" size={13} />
+              <span>Painel</span>
             </Link>
 
             <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-white ml-1">

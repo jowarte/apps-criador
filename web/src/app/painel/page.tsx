@@ -523,16 +523,8 @@ export default function ProducerDashboard() {
           </nav>
         </div>
 
-        {/* Rodapé da Sidebar com Atalho para o Dono do SaaS */}
-        <div className="pt-4 border-t border-[#2D1E51]/60 space-y-2">
-          <Link
-            href="/admapps"
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-purple-950/40 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-bold transition"
-            title="Acessar o Painel Super Admin (Dono da Plataforma)"
-          >
-            <Icon name="Crown" size={14} className="text-amber-400" />
-            <span>Painel Super Admin (/admapps)</span>
-          </Link>
+        {/* Rodapé da Sidebar */}
+        <div className="pt-4 border-t border-[#2D1E51]/60">
           <div className="flex items-center gap-2.5 px-2 text-xs text-slate-400">
             <div className="w-8 h-8 rounded-full bg-purple-900 flex items-center justify-center text-white font-bold text-xs">
               PV
@@ -564,13 +556,6 @@ export default function ProducerDashboard() {
             >
               <Icon name="Smartphone" size={13} />
               <span>Abrir Construtor PWA</span>
-            </Link>
-            <Link
-              href="/admapps"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold text-xs hover:bg-amber-500/25 transition"
-            >
-              <Icon name="Crown" size={13} />
-              <span>Super Admin</span>
             </Link>
           </div>
         </header>
